@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <link rel="stylesheet" href="index.css"/>
+
+</head>
+<body>
+<div class="row"></div>
+<div class="row"></div>
+<div class="row">
+    <div class="col s1">
+
+    </div>
+    <div class="input-field col s8">
+        <input type="text" class="autocomplete" id="query">
+        <label for="autocomplete-input">Suche nach Gifs</label>
+    </div>
+    <div class="col s3">
+        <a class="waves-effect waves-light btn blue" onclick="sendRequest(20, 0, true)" style="margin-top: 15px">
+            <i class="fa fa-search"></i>
+            Suchen
+        </a>
+    </div>
+</div>
+<div class="container">
+    <ul class="pagination" id="paging">
+
+    </ul>
+</div>
+<div class="container" id="gifs">
+
+</div>
+<script src="index.js" type="text/javascript"></script>
+</body>
+</html>

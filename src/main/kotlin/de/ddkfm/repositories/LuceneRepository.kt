@@ -1,4 +1,4 @@
-package de.ddkfm
+package de.ddkfm.repositories
 
 import org.apache.lucene.analysis.de.GermanAnalyzer
 import org.apache.lucene.document.Document
@@ -7,14 +7,14 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
-import org.apache.lucene.queryparser.simple.SimpleQueryParser
 import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.store.FSDirectory
 import java.nio.file.Paths
 
 object LuceneIndex  {
-    val path = Paths.get("./lucene_index")
+    val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
+    val path = Paths.get(luceneLocation)
     private val directory = FSDirectory.open(path)
     val analyzer = GermanAnalyzer()
     fun searchForKeyword(keyword : String, limit : Int, offset : Int) {

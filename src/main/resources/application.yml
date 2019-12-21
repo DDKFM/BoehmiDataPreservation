@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
   http2:
     enabled: true
   compression:
@@ -21,5 +21,4 @@ spring:
 logging:
   level:
     org.springframework.web: INFO
-    org.springframework.security: INFO
   file: logs/app.log
