@@ -91,7 +91,6 @@
                     </args>
                     <compilerPlugins>
                         <plugin>spring</plugin>
-                        <plugin>jpa</plugin>
                     </compilerPlugins>
                 </configuration>
                 <dependencies>
@@ -111,7 +110,7 @@
                         <image>openjdk:13</image>
                     </from>
                     <to>
-                        <image>ddkfm/${project.artifactId}:latest</image>
+                        <image>index.docker.io/ddkfm/${project.artifactId}:latest</image>
                     </to>
                     <container>
                         <jvmFlags>
@@ -128,7 +127,7 @@
                         <id>build</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>build</goal>
+                            <goal>dockerBuild</goal>
                         </goals>
                     </execution>
                 </executions>
