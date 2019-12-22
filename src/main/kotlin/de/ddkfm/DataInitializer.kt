@@ -42,7 +42,7 @@ class DataInitializer : CommandLineRunner {
                         println(tweet.id)
                         val hash = DigestUtils.sha256Hex(bytes)
                         LuceneIndex.addOrUpdate(tweet.id, mapOf(
-                            "keywords" to "",
+                            "keywords" to "neomagazin",
                             "tweet" to tweet.text,
                             "hash" to hash,
                             "user" to tweet.user.screenName,
