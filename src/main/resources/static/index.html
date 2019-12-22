@@ -1,42 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml"
+      xmlns:v="http://www.w3.org/1999/xhtml">
 <head>
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <link rel="stylesheet" href="index.css"/>
-
 </head>
 <body>
-<div class="row"></div>
-<div class="row"></div>
-<div class="row">
-    <div class="col s1">
+<div id="app" class="container">
+    <div class="row"></div>
+    <div class="row"></div>
+    <div class="row">
+        <div class="col s1"></div>
+        <div class="input-field col s8">
+            <input type="text" class="autocomplete" v-model="searchQuery" id="autocomplete-input">
+            <label for="autocomplete-input">Suche nach deinen liebsten Boehmi-Gifs</label>
+        </div>
+        <div class="col s3">
+            <a class="waves-effect waves-light btn blue" v-on:click="sendRequest(20, 0)" style="margin-top: 15px" id="search">
+                <i class="fa fa-search"></i>
+                Suchen
+            </a>
+        </div>
+    </div>
+    <div class="row">
 
+        <ul class="pagination" id="paging" class="blue">
+            <li class="waves-effect" v-if="pageCount">
+                <a v-on:click="sendRequest(20, prevPage())">
+                    <i class="material-icons">chevron_left</i>
+                </a>
+            </li>
+            <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
+                <a v-on:click="sendRequest(20, page - 1)">
+                    {{ page - 1 }}
+                </a>
+            </li>
+            <li class="waves-effect" v-if="pageCount">
+                <a v-on:click="sendRequest(20, nextPage())">
+                    <i class="material-icons">chevron_right</i>
+                </a>
+            </li>
+        </ul>
     </div>
-    <div class="input-field col s8">
-        <input type="text" class="autocomplete" id="query">
-        <label for="autocomplete-input">Suche nach Gifs</label>
-    </div>
-    <div class="col s3">
-        <a class="waves-effect waves-light btn blue" onclick="sendRequest(20, 0, true)" style="margin-top: 15px">
-            <i class="fa fa-search"></i>
-            Suchen
-        </a>
+    <div class="row">
+        <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
+            <div class="card-content">
+                <video autoplay="false"
+                       controls=""
+                       loop=""
+                       preload="auto"
+                       width="100%"
+                       v-bind:src="getImageData(gif.url)"
+                       type="video/mp4"></video><br>
+                <div class="chips">
+                    <div class="chip" v-for="keyword in gif.keywords">
+                        {{ keyword }}
+                        <i class="close material-icons" v-on:click="onDelete(gif, keyword)">close</i>
+                    </div>
+                    <input class="input" placeholder="+Tag" v-bind:id="getTweetId(gif.url)" v-on:keyup.enter="onEnter(gif)">
+                </div>
+            </div>
+            <div class="card-action">
+                <a v-bind:href="getImageData(gif.url)"
+                   v-bind:download="getImageFilename(gif.url)">
+                    <i class="fa fa-download"></i>
+                </a>
+                <a v-bind:href="gif.tweetUrl"
+                   title="Link zum Tweet" target="_blank">
+                    <i class="fa fa-twitter"></i>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
-<div class="container">
-    <ul class="pagination" id="paging">
-
-    </ul>
-</div>
-<div class="container" id="gifs">
-
-</div>
-<script src="index.js" type="text/javascript"></script>
 </body>
+<script src="index.js" type="text/javascript"></script>
 </html>
