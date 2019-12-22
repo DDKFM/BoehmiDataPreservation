@@ -29,19 +29,18 @@ class GifController {
         IOUtils.copy(gif, response.outputStream)
     }
 
-    @PostMapping("/gifs/{tweetId}")
+    @PostMapping("/gifs/{tweetId}/keywords")
     fun addKeywords(@PathVariable("tweetId") tweetId: Long,
                     @RequestBody keywords : List<String>
-    ) : ResponseEntity<Gif> {
-        var document = LuceneIndex.searchForId(tweetId) ?: return badRequest().build()
-        val existingKeywords = document.get("keywords").split(" ")
-        val newKeywords = existingKeywords.union(keywords)
+    ) : ResponseEntity<String> {
+        var document = LuceneIndex.searchForId(tweetId)
+            ?: return badRequest().build()
         document = LuceneIndex.addOrUpdate(
             tweetId,
-            mapOf("keywords" to newKeywords.joinToString(separator = " "))
+            mapOf("keywords" to keywords.joinToString(separator = " "))
         )
             ?: return badRequest().build()
-        return ok(document.toGifMetaData())
+        return ok("")
     }
 
 }
