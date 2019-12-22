@@ -7,6 +7,8 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
+import org.apache.lucene.search.BooleanClause
+import org.apache.lucene.search.BooleanQuery
 import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.store.FSDirectory
@@ -35,10 +37,17 @@ object LuceneIndex  {
         val reader = DirectoryReader.open(directory)
         return reader.use {
             val searcher = IndexSearcher(it)
-            val query = StandardQueryParser(analyzer).apply {
+            val query1 = StandardQueryParser(analyzer).apply {
                 allowLeadingWildcard = true
             }.parse(query, "tweet")
-            val searchResult = searcher.search(query, Integer.MAX_VALUE)
+            val query2 = StandardQueryParser(analyzer).apply {
+                allowLeadingWildcard = true
+            }.parse(query, "keywords")
+            val booleanQuery = BooleanQuery.Builder()
+                .add(BooleanClause(query1, BooleanClause.Occur.SHOULD))
+                .add(BooleanClause(query2, BooleanClause.Occur.SHOULD))
+                .build()
+            val searchResult = searcher.search(booleanQuery, Integer.MAX_VALUE)
             println(searchResult.scoreDocs.size)
             val pagedResults = searchResult
                 .scoreDocs
@@ -77,10 +86,14 @@ object LuceneIndex  {
             val documentFields = listOf<IndexableField>(
                 StringField("twitterId", "$id", Field.Store.YES)
             ).plus(fields.map { TextField(it.key, it.value, Field.Store.YES) })
+            for(field in documentFields) {
+                existing?.removeField(field.name())
+                existing?.add(field)
+            }
             val documentId = if(existing == null)
                 lucene.addDocument(documentFields)
             else
-                lucene.updateDocument(Term("twitterId", "$id"), documentFields)
+                lucene.updateDocument(Term("twitterId", "$id"), existing)
             return@use searchForId(id)
         }
     }

@@ -23,7 +23,7 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ): ResponseEntity<GifSearchResponse> {
-        val documents = LuceneIndex.query("tweet:*$query", limit, offset)
+        val documents = LuceneIndex.query("tweet:*$query OR keywords:*$query", limit, offset)
         val gifs = documents.content.map(Document::toGifMetaData)
         return ok(
             GifSearchResponse(
