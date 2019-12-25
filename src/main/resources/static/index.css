@@ -24,3 +24,9 @@
 .autocomplete-content li .highlight {
     color: red!important;
 }
+.github-corner > svg {
+    left:0;
+    transform: scale(-0.5, 0.5);
+    margin-left: -20px;
+    margin-top: -20px;
+}
