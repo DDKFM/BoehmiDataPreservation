@@ -1,7 +1,6 @@
 package de.ddkfm.controller
 
-import de.ddkfm.repositories.LuceneIndex
-import de.ddkfm.models.Gif
+import de.ddkfm.repositories.LuceneRepository
 import de.ddkfm.models.GifSearchResponse
 import de.ddkfm.utils.toGifMetaData
 import org.apache.lucene.document.Document
@@ -23,7 +22,7 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ): ResponseEntity<GifSearchResponse> {
-        val documents = LuceneIndex.query("tweet:*$query OR keywords:*$query", limit, offset)
+        val documents = LuceneRepository.query("tweet:$query* OR keywords:$query* - deleted:true", limit, offset)
         val gifs = documents.content.map(Document::toGifMetaData)
         return ok(
             GifSearchResponse(

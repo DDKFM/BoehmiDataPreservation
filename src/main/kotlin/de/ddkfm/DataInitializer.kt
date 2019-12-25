@@ -1,7 +1,8 @@
 package de.ddkfm
 
 import de.ddkfm.repositories.GifRepository
-import de.ddkfm.repositories.LuceneIndex
+import de.ddkfm.repositories.LuceneRepository
+import de.ddkfm.utils.*
 import kong.unirest.Unirest
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.boot.CommandLineRunner
@@ -11,7 +12,10 @@ import twitter4j.Paging
 @Component
 class DataInitializer : CommandLineRunner {
     override fun run(vararg args: String) {
-        Twitter.doWithTwitter { indexTweetsFromUser("vera_meleena") }
+        val users = System.getenv("TWITTER_USERS")?.split(",") ?: emptyList()
+        for(user in users) {
+            Twitter.doWithTwitter { indexTweetsFromUser(user) }
+        }
     }
 
     fun twitter4j.Twitter.indexTweetsFromUser(user : String) {
@@ -29,27 +33,38 @@ class DataInitializer : CommandLineRunner {
                 println("Tweets fetched: ${tweets.size}")
 
                 for(tweet in tweets) {
-                    if(GifRepository.findById(tweet.id) != null)
-                        continue
+                    val existing = LuceneRepository.searchForAnyId(tweet.id)
+                    LuceneRepository.urlCache.get(tweet.id) { tweet.mediaEntities.map { it.expandedURL }.first() }
+                    if(existing != null)
+                        continue//if the tweetId is already in the index, continue
                     val tweetUrl = tweet.mediaEntities
                         .map { it.videoVariants.map { it.url } }
                         .flatten()
-                        .first()
-                    val bytes = tweetUrl.let { Unirest.get(it).asBytes().body }
-                    GifRepository.storeGif(tweet.id, bytes)
-                    val existing = LuceneIndex.searchForId(tweet.id)
-                    if(existing == null) {
-                        println(tweet.id)
-                        val hash = DigestUtils.sha256Hex(bytes)
-                        LuceneIndex.addOrUpdate(tweet.id, mapOf(
-                            "keywords" to "neomagazin",
-                            "tweet" to tweet.text,
-                            "hash" to hash,
-                            "user" to tweet.user.screenName,
-                            "twitterUrl" to tweet.mediaEntities.map { it.expandedURL }.first()
-
-                        ))
+                        .first()//fetch the mediaUrl
+                    val bytes = tweetUrl?.download()//Download the GIF
+                        ?: continue
+                    val hash = DigestUtils.sha256Hex(bytes)
+                    val mainDocument = LuceneRepository.searchForHash(hash)
+                    if(mainDocument != null) {//any tweet with the same gif hash
+                        LuceneRepository.update(mainDocument["twitterId"].toLong()) {  ->
+                            appendOrCreate("text", tweet.text)
+                            appendOrCreate("sameTweetIds", tweet.id)
+                        }
+                        println("duplicate GIF for tweetId ${mainDocument["twitterId"].toLong()} found")
+                        continue
                     }
+                    GifRepository.storeGif(tweet.id, bytes)
+                    LuceneRepository.create(tweet.id) {
+                        create("twitterId", tweet.id)
+                        create("tweet", tweet.text)
+                        create("hash", hash)
+                        create("user", tweet.user.screenName)
+                        create("twitterUrl", tweet.mediaEntities.map { it.expandedURL }.first())
+                        create("keywords", "neomagazin")
+                        create("sameTweetIds", "")
+                        create("deleted", false)
+                    }
+                    println("tweet with id ${tweet.id} created (hash: $hash)")
                 }
                 if(tweets.isEmpty())
                     nullCounter++

@@ -1,5 +1,8 @@
 package de.ddkfm.repositories
 
+import com.google.common.cache.CacheBuilder
+import de.ddkfm.utils.create
+import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.de.GermanAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -7,94 +10,144 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
-import org.apache.lucene.search.BooleanClause
-import org.apache.lucene.search.BooleanQuery
-import org.apache.lucene.search.IndexSearcher
-import org.apache.lucene.search.TermQuery
+import org.apache.lucene.search.*
 import org.apache.lucene.store.FSDirectory
 import java.nio.file.Paths
+import java.util.concurrent.locks.ReentrantLock
 
-object LuceneIndex  {
+object LuceneRepository  {
+    val urlCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .build<Long, String>()
     val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
     val path = Paths.get(luceneLocation)
     private val directory = FSDirectory.open(path)
-    val analyzer = GermanAnalyzer()
-    fun searchForKeyword(keyword : String, limit : Int, offset : Int) {
-        val reader = DirectoryReader.open(directory)
-        reader.use {
-            val searcher = IndexSearcher(it)
-            val query = TermQuery(Term("keywords", keyword))
-            val searchResult = searcher.search(query, limit)
-            val pagedResults = searchResult
-                .scoreDocs
-                .drop(offset)
-                .take(limit)
+    val analyzer by lazy {
+        val builder = CustomAnalyzer
+            .builder()
+            .withTokenizer("standard")
+            .addTokenFilter("lowercase")
+            .addTokenFilter("hyphenationCompoundWord", mapOf(
+                "hyphenator" to "lucene_config/de_DR.xml",
+                "dictionary" to "lucene_config/dictionary-de.txt",
+                "onlyLongestMatch" to "true",
+                "minSubwordSize" to "4"
+            ))
+            .build()
+        builder
+    }
 
+    private fun search(query : Query, limit : Int = Integer.MAX_VALUE, offset : Int = 0) : List<ScoreDoc> {
+        return doWithReader {
+            val searchResult = query(query)
+            searchResult
+                .scoreDocs
+                .limitAndOffset(limit, offset)
+        }
+    }
+
+    private fun <T> Array<T>.limitAndOffset(limit : Int = Integer.MAX_VALUE, offset : Int = 0) : List<T> {
+        return this.drop(offset).take(limit)
+    }
+
+    private fun DirectoryReader.query(query: Query) : TopDocs {
+        val searcher = IndexSearcher(this)
+        return searcher.search(query, Integer.MAX_VALUE)
+    }
+
+    private fun <T> doWithReader(func : DirectoryReader.() -> T) : T {
+        val reader = try {
+            DirectoryReader.open(directory)
+        } catch (e: IndexNotFoundException) {
+            doWithWriter {  }
+            DirectoryReader.open(directory)
+        }
+        return reader.use(func)
+    }
+
+    private fun <T> doWithWriter(func : IndexWriter.() -> T) : T {
+        val writer = IndexWriter(directory, IndexWriterConfig(analyzer))
+        val lock = ReentrantLock()
+        lock.lock()
+        try {
+            return writer.use(func)
+        } finally {
+            lock.unlock()
         }
     }
 
     fun query(query : String, limit : Int, offset : Int) : LuceneResponse<List<Document>> {
-        val reader = DirectoryReader.open(directory)
-        return reader.use {
-            val searcher = IndexSearcher(it)
-            val query1 = StandardQueryParser(analyzer).apply {
-                allowLeadingWildcard = true
-            }.parse(query, "tweet")
-            val query2 = StandardQueryParser(analyzer).apply {
-                allowLeadingWildcard = true
-            }.parse(query, "keywords")
-            val booleanQuery = BooleanQuery.Builder()
-                .add(BooleanClause(query1, BooleanClause.Occur.SHOULD))
-                .add(BooleanClause(query2, BooleanClause.Occur.SHOULD))
-                .build()
-            val searchResult = searcher.search(booleanQuery, Integer.MAX_VALUE)
-            println(searchResult.scoreDocs.size)
+        val query1 = StandardQueryParser(analyzer).apply {
+            allowLeadingWildcard = true
+        }.parse(query, "tweet")
+        return doWithReader {
+            val searchResult = query(query1)
             val pagedResults = searchResult
                 .scoreDocs
                 .drop(offset)
                 .take(limit)
-                .map { reader.document(it.doc) }
-            return@use LuceneResponse(searchResult.totalHits.value, pagedResults)
+                .map { this.document(it.doc) }
+            return@doWithReader LuceneResponse(searchResult.totalHits.value, pagedResults)
         }
+
     }
 
     fun searchForId(id : Long) : Document? {
-        val reader = try {
-            DirectoryReader.open(directory)
-        } catch (e: IndexNotFoundException) {
-            null
-        }
-        if(reader == null)
-            return null
-        return reader.use {
-            val searcher = IndexSearcher(it)
-            val query = TermQuery(Term("twitterId", "$id"))
-            val searchResult = searcher.search(query, 1)
-            val docId = searchResult
+        return doWithReader {
+            query(TermQuery(Term("twitterId", "$id")))
                 .scoreDocs
                 .firstOrNull()
                 ?.doc
-                ?: return@use null
-            it.document(docId)
+                ?.let { this.document(it) }
         }
     }
 
-    fun addOrUpdate(id : Long, fields : Map<String, String>) : Document? {
-        val writer = IndexWriter(directory, IndexWriterConfig(analyzer))
+    fun searchForAnyId(id : Long) : Document? {
+        return doWithReader {
+            query(
+                query = BooleanQuery.Builder()
+                    .add(BooleanClause(TermQuery(Term("twitterId", "$id")), BooleanClause.Occur.SHOULD))
+                    .add(BooleanClause(TermQuery(Term("sameTweetIds", "$id")), BooleanClause.Occur.SHOULD))
+                    .build()
+            )
+                .scoreDocs
+                .firstOrNull()
+                ?.doc
+                ?.let { this.document(it) }
+        }
+    }
+
+    fun searchForHash(hash : String) : Document? {
+        return doWithReader {
+            query(TermQuery(Term("hash", "$hash")))
+                .scoreDocs
+                .firstOrNull()
+                ?.doc
+                ?.let { this.document(it) }
+        }
+    }
+
+    fun update(id : Long, func : Document.() -> Unit) : Document? {
         val existing = searchForId(id)
-        return writer.use { lucene ->
-            val documentFields = listOf<IndexableField>(
-                StringField("twitterId", "$id", Field.Store.YES)
-            ).plus(fields.map { TextField(it.key, it.value, Field.Store.YES) })
-            for(field in documentFields) {
-                existing?.removeField(field.name())
-                existing?.add(field)
-            }
-            val documentId = if(existing == null)
-                lucene.addDocument(documentFields)
-            else
-                lucene.updateDocument(Term("twitterId", "$id"), existing)
-            return@use searchForId(id)
+            ?: return null
+        existing.apply(func)
+        return doWithWriter {
+            val documentId = this.updateDocument(Term("twitterId", "$id"), existing)
+            searchForId(id)
+        }
+    }
+
+    fun delete(id : Long) : Document? {
+        return update(id) {
+            create("deleted", "true")
+        }
+    }
+
+    fun create(id : Long, func : Document.() -> Unit) : Document? {
+        val document = Document().apply(func)
+        return doWithWriter {
+            val documentId = this.addDocument(document)
+            searchForId(id)
         }
     }
 }

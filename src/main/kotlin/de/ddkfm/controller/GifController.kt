@@ -1,8 +1,10 @@
 package de.ddkfm.controller
 
 import de.ddkfm.repositories.GifRepository
-import de.ddkfm.repositories.LuceneIndex
+import de.ddkfm.repositories.LuceneRepository
 import de.ddkfm.models.Gif
+import de.ddkfm.utils.appendOrCreate
+import de.ddkfm.utils.create
 import de.ddkfm.utils.toGifMetaData
 import org.apache.tomcat.util.http.fileupload.IOUtils
 import org.springframework.http.ResponseEntity
@@ -17,13 +19,13 @@ class GifController {
 
     @GetMapping("/gifs/{tweetId}")
     fun getGifMetadata(@PathVariable("tweetId") tweetId: Long) : ResponseEntity<Gif> {
-        val document = LuceneIndex.searchForId(tweetId) ?: return notFound().build()
+        val document = LuceneRepository.searchForId(tweetId) ?: return notFound().build()
         return ok(document.toGifMetaData())
     }
 
     @GetMapping("/gifs/{tweetId}/data")
     fun getGif(@PathVariable("tweetId") tweetId: Long, response : HttpServletResponse) {
-        val document = LuceneIndex.searchForId(tweetId)
+        val document = LuceneRepository.searchForId(tweetId)
         val gif = GifRepository.findById(tweetId)
         response.contentType = "video/mp4"
         IOUtils.copy(gif, response.outputStream)
@@ -33,14 +35,21 @@ class GifController {
     fun addKeywords(@PathVariable("tweetId") tweetId: Long,
                     @RequestBody keywords : List<String>
     ) : ResponseEntity<String> {
-        var document = LuceneIndex.searchForId(tweetId)
+        var document = LuceneRepository.searchForId(tweetId)
             ?: return badRequest().build()
-        document = LuceneIndex.addOrUpdate(
-            tweetId,
-            mapOf("keywords" to keywords.joinToString(separator = " "))
-        )
-            ?: return badRequest().build()
+        LuceneRepository.update(tweetId) {
+            create("keywords", keywords.joinToString(separator = " "))
+        }
         return ok("")
+    }
+
+    @DeleteMapping("/gifs/{tweetId}")
+    fun deleteGif(@PathVariable("tweetId") tweetId : Long) : ResponseEntity<Boolean> {
+        var document = LuceneRepository.searchForId(tweetId)
+            ?: return badRequest().build()
+        return ok(
+            LuceneRepository.delete(tweetId)?.get("deleted")?.contentEquals("true") != null
+        )
     }
 
 }

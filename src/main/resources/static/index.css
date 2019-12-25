@@ -7,3 +7,20 @@
     font-size: 20px;
     color: #55ACEE;
 }
+.otherTweet {
+    color: lightblue;
+}
+
+
+.section-search input.autocomplete {
+    color: #fff;
+}
+.input-field .prefix.active {
+    color: #fff!important;
+}
+.dropdown-content li>a, .dropdown-content li>span {
+    color: #fff!important;
+}
+.autocomplete-content li .highlight {
+    color: red!important;
+}

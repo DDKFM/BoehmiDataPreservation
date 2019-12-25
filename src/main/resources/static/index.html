@@ -14,70 +14,110 @@
     <link rel="stylesheet" href="index.css"/>
 </head>
 <body>
-<div id="app" class="container">
-    <div class="row"></div>
-    <div class="row"></div>
-    <div class="row">
-        <div class="col s1"></div>
-        <div class="input-field col s8">
-            <input type="text" class="autocomplete" v-model="searchQuery" id="autocomplete-input">
-            <label for="autocomplete-input">Suche nach deinen liebsten Boehmi-Gifs</label>
-        </div>
-        <div class="col s3">
-            <a class="waves-effect waves-light btn blue" v-on:click="sendRequest(20, 0)" style="margin-top: 15px" id="search">
-                <i class="fa fa-search"></i>
-                Suchen
-            </a>
-        </div>
-    </div>
-    <div class="row">
+<div id="app" >
+    <nav class="transparent">
+        <div class="row">
+            <div class="col s1">
 
-        <ul class="pagination" id="paging" class="blue">
-            <li class="waves-effect" v-if="pageCount">
-                <a v-on:click="sendRequest(20, prevPage())">
-                    <i class="material-icons">chevron_left</i>
+            </div>
+            <div class="input-field col s7">
+                <input type="text" class="autocomplete" v-model="searchQuery" id="autocomplete-input" placeholder="GIF-Suche" v-on:keyup.enter="sendRequest(limit, 0)">
+            </div>
+            <div class="col s3">
+                <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="sendRequest(limit, 0)" id="search">
+                    <i class="fa fa-search"></i>
                 </a>
-            </li>
-            <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
-                <a v-on:click="sendRequest(20, page - 1)">
-                    {{ page - 1 }}
-                </a>
-            </li>
-            <li class="waves-effect" v-if="pageCount">
-                <a v-on:click="sendRequest(20, nextPage())">
-                    <i class="material-icons">chevron_right</i>
-                </a>
-            </li>
-        </ul>
-    </div>
-    <div class="row">
-        <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
-            <div class="card-content">
-                <video autoplay="false"
-                       controls=""
-                       loop=""
-                       preload="auto"
-                       width="100%"
-                       v-bind:src="getImageData(gif.url)"
-                       type="video/mp4"></video><br>
-                <div class="chips">
-                    <div class="chip" v-for="keyword in gif.keywords">
-                        {{ keyword }}
-                        <i class="close material-icons" v-on:click="onDelete(gif, keyword)">close</i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row">
+
+            <ul class="pagination" id="paging" class="blue">
+                <li class="waves-effect" v-if="pageCount">
+                    <a v-on:click="sendRequest(limit, prevPage())">
+                        <i class="material-icons">chevron_left</i>
+                    </a>
+                </li>
+                <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
+                    <a v-on:click="sendRequest(limit, page - 1)">
+                        {{ page - 1 }}
+                    </a>
+                </li>
+                <li class="waves-effect" v-if="pageCount">
+                    <a v-on:click="sendRequest(limit, nextPage())">
+                        <i class="material-icons">chevron_right</i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
+                <div class="card-content">
+                    <video autoplay loop autobuffer muted playsinline
+                           width="100%"
+                           v-bind:src="getImageData(gif.url)"
+                           type="video/mp4"></video><br>
+                    <div class="chips">
+                        <div class="chip" v-for="keyword in gif.keywords">
+                            {{ keyword }}
+                            <i class="close material-icons" v-on:click="onDelete(gif, keyword)">close</i>
+                        </div>
+                        <input class="input" placeholder="+Tag" v-bind:id="getTweetId(gif.url)" v-on:keyup.enter="onEnter(gif)">
                     </div>
-                    <input class="input" placeholder="+Tag" v-bind:id="getTweetId(gif.url)" v-on:keyup.enter="onEnter(gif)">
+                </div>
+                <div class="card-action">
+                    <a v-bind:href="getImageData(gif.url)"
+                       v-bind:download="getImageFilename(gif.url)">
+                        <i class="fa fa-download"></i>
+                    </a>
+                    <a v-bind:href="gif.tweetUrl"
+                       title="Link zum Tweet" target="_blank">
+                        <i class="fa fa-twitter"></i>
+                    </a>
+                    <a v-for="otherUrl in gif.otherTweetUrls"
+                       v-bind:href="otherUrl"
+                       title="Link zum Tweet" target="_blank">
+                        <i class="fa fa-twitter otherTweet"></i>
+                    </a>
+                    <a title="Gif löschen" v-on:click="openModal(gif)">
+                        <i class="material-icons" style="float: right; color: red; font-weight: bold; cursor: pointer">close</i>
+                    </a>
+                    <div v-bind:id="getTweetId(gif.url) + '_modal'" class="modal bottom-sheet">
+                        <div class="modal-content">
+                            <h4>Löschen von GIF {{ getTweetId(gif.url) }}</h4>
+                            <p>Möchtest du dieses Gif wirklich löschen?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a class="modal-close waves-effect waves-light btn blue">Nicht löschen</a>
+                            <a v-on:click="deleteGif(gif)" class="modal-close waves-effect waves-light btn red">Löschen</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-action">
-                <a v-bind:href="getImageData(gif.url)"
-                   v-bind:download="getImageFilename(gif.url)">
-                    <i class="fa fa-download"></i>
-                </a>
-                <a v-bind:href="gif.tweetUrl"
-                   title="Link zum Tweet" target="_blank">
-                    <i class="fa fa-twitter"></i>
-                </a>
-            </div>
+        </div>
+        <div class="row">
+
+            <ul class="pagination" id="paging" class="blue">
+                <li class="waves-effect" v-if="pageCount">
+                    <a v-on:click="sendRequest(limit, prevPage())">
+                        <i class="material-icons">chevron_left</i>
+                    </a>
+                </li>
+                <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
+                    <a v-on:click="sendRequest(limit, page - 1)">
+                        {{ page - 1 }}
+                    </a>
+                </li>
+                <li class="waves-effect" v-if="pageCount">
+                    <a v-on:click="sendRequest(limit, nextPage())">
+                        <i class="material-icons">chevron_right</i>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

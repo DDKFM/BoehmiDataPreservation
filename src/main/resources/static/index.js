@@ -5,6 +5,7 @@ var app = new Vue({
         currentPage : 0,
         pageCount : 0,
         gifs : [],
+        limit : 10
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -81,9 +82,30 @@ var app = new Vue({
                 }
             });
             $('#' + tweetId).val("")
+        },
+        openModal : function(gif) {
+            var tweetId = app.getTweetId(gif.url)
+            $("#" + tweetId + "_modal").modal();
+            $("#" + tweetId + "_modal").modal('open')
+        },
+        deleteGif : function(gif) {
+            console.log("Löschen")
+            var tweetId = app.getTweetId(gif.url)
+            $.ajax({
+                type: "DELETE",
+                url: "/v1/gifs/" + tweetId,
+                success: function(data){
+                    console.log("Gif wurde gelöscht");
+                    app.sendRequest(app.limit, app.currentPage)
+                },
+                failure: function(errMsg) {
+                    console.log(errorMsg)
+                }
+            });
         }
     }
 });
 
 app.searchQuery = ""
-app.sendRequest(20, 0)
+app.sendRequest(app.limit, 0)
+$('select').formSelect();
