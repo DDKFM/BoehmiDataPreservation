@@ -1,3 +1,6 @@
+.fa {
+    cursor:pointer;
+}
 .fa:hover {
     opacity: 0.7;
 }
@@ -29,4 +32,11 @@
     transform: scale(-0.5, 0.5);
     margin-left: -20px;
     margin-top: -20px;
+}
+
+.fa-star {
+    color: gray;'
+}
+.isFavorite {
+    color: #ffab40 !important;
 }

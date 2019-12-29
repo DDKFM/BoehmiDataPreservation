@@ -1,34 +1,66 @@
+var router = new VueRouter({
+    mode: 'history',
+    routes: []
+});
+
 var app = new Vue({
+    router,
     el: '#app',
     data: {
         searchQuery : '',
         currentPage : 0,
         pageCount : 0,
         gifs : [],
-        limit : 10
+        limit : 10,
+        favorites : [],
+        parameters : {},
+        showOnlyFavorites : false
     },
     methods : {
         sendRequest : function (limit, page) {
             this.currentPage = page
             var query = app.searchQuery == '' ? '' : '&query=' + app.searchQuery
             var offset = page * limit
-            $.get('/v1/search?limit=' + limit + "&offset=" + offset + query, function(response) {
-                app.gifs = response.gifs
-                app.pageCount = Math.ceil(response.count / response.limit)
-                $('.chips-placeholder').chips({
-                    placeholder: 'Tag hinzufügen',
-                    secondaryPlaceholder: '+Tag',
-                    onChipAdd : function() {
-                        var chips = $('#' + this.el.id + " .chip").text().replace("<i class=\"material-icons close\">close</i>", "")
-                        console.log(chips.split(" "))
-                        console.log(this)
-                        console.log(this.el.id)
-                    }
-                });
-            })
-        },
-        sendKeywords : function(tweetId, keywords) {
+            var url = "/v1/search"
+            var data = ''
+            var method = "GET"
+            if(this.showOnlyFavorites) {
+                url = "/v1/searchByIds"
+                data = JSON.stringify(app.favorites)
+                method = "POST"
+            }
+            $.ajax({
+                type: method,
+                url: url + '?limit=' + limit + "&offset=" + offset + query,
+                data: data,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){
+                    app.showGifs(data)
 
+                },
+                failure: function(errMsg) {
+                    console.log(errorMsg)
+                }
+            });
+        },
+        showFavorites : function() {
+            this.showOnlyFavorites = !this.showOnlyFavorites
+            this.sendRequest(this.limit, 0)
+        },
+        showGifs : function(response) {
+            app.gifs = response.gifs
+            app.pageCount = Math.ceil(response.count / response.limit)
+            $('.chips-placeholder').chips({
+                placeholder: 'Tag hinzufügen',
+                secondaryPlaceholder: '+Tag',
+                onChipAdd : function() {
+                    var chips = $('#' + this.el.id + " .chip").text().replace("<i class=\"material-icons close\">close</i>", "")
+                    console.log(chips.split(" "))
+                    console.log(this)
+                    console.log(this.el.id)
+                }
+            });
         },
         getImageData : function(url) {
             return url + "/data"
@@ -102,6 +134,31 @@ var app = new Vue({
                     console.log(errorMsg)
                 }
             });
+        },
+        addAsFavorite : function(gif) {
+            var tweetId = app.getTweetId(gif.url)
+            if(app.isGifFavorite(gif)) {
+                app.favorites.splice(app.favorites.indexOf(tweetId), 1)
+            } else {
+                app.favorites.push(tweetId)
+            }
+        },
+        isGifFavorite : function(gif) {
+            var tweetId = app.getTweetId(gif.url)
+            return app.favorites.indexOf(tweetId) != -1
+        }
+    },
+    mounted() {
+        console.log(this.$route)
+        this.parameters = this.$route.query
+        //console.log(parameters)
+        if (localStorage.favorites) {
+            this.favorites = JSON.parse(localStorage.favorites);
+        }
+    },
+    watch: {
+        favorites(favorites) {
+            localStorage.favorites= JSON.stringify(this.favorites);
         }
     }
 });
