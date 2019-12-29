@@ -6,7 +6,7 @@ import de.ddkfm.repositories.LuceneRepository
 import org.apache.lucene.document.Document
 
 fun Document.toGifMetaData() : Gif {
-    val tweetId = this.get("twitterId")
+    val tweetId = this.get("twitterId").toLong()
     val otherTwitterUrls = this.get("sameTweetIds")
         .split(" ")
         .filter { it != "" }
@@ -19,6 +19,7 @@ fun Document.toGifMetaData() : Gif {
         keywords = this.get("keywords").split(" "),
         user = this.get("user"),
         tweetUrl = this.get("twitterUrl"),
-        otherTweetUrls = otherTwitterUrls
+        otherTweetUrls = otherTwitterUrls,
+        posterUrl = LuceneRepository.posterCache.get(tweetId) { tweetId.getPosterUrl()}
     )
 }

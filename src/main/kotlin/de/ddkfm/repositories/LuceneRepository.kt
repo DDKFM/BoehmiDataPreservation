@@ -19,6 +19,9 @@ object LuceneRepository  {
     val urlCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .build<Long, String>()
+    val posterCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .build<Long, String>()
     val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
     val path = Paths.get(luceneLocation)
     private val directory = FSDirectory.open(path)

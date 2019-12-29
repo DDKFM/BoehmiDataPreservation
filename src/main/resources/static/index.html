@@ -30,7 +30,7 @@
                 <input type="text" class="autocomplete" v-model="searchQuery" id="autocomplete-input" placeholder="GIF-Suche" v-on:keyup.enter="sendRequest(limit, 0)">
             </div>
             <div class="col s4">
-                <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="sendRequest(limit, 0)" title="Suchen"
+                <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="sendRequest(limit, 0)" title="Suchen">
                     <i class="fa fa-search"></i>
                 </a>
                 <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="showFavorites()" title="zu Favoriten wechseln">
@@ -66,7 +66,9 @@
             <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
                 <div class="card-content">
                     <video autoplay loop autobuffer muted playsinline
+                           preload="auto"
                            width="100%"
+                           v-bind:poster="gif.posterUrl"
                            v-bind:src="getImageData(gif.url)"
                            type="video/mp4"></video><br>
                     <div class="chips">

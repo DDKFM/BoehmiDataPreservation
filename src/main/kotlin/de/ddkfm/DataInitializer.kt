@@ -35,6 +35,7 @@ class DataInitializer : CommandLineRunner {
                 for(tweet in tweets) {
                     val existing = LuceneRepository.searchForAnyId(tweet.id)
                     LuceneRepository.urlCache.get(tweet.id) { tweet.mediaEntities.map { it.expandedURL }.first() }
+                    LuceneRepository.posterCache.get(tweet.id) {tweet.mediaEntities.map { it.mediaURLHttps }.first()}
                     if(existing != null)
                         continue//if the tweetId is already in the index, continue
                     val tweetUrl = tweet.mediaEntities
