@@ -40,3 +40,6 @@
 .isFavorite {
     color: #ffab40 !important;
 }
+.hidden {
+    opacity: 0;
+}

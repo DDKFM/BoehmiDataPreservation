@@ -14,7 +14,8 @@ var app = new Vue({
         limit : 10,
         favorites : [],
         parameters : {},
-        showOnlyFavorites : false
+        showOnlyFavorites : false,
+        keywords : {}
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -146,6 +147,18 @@ var app = new Vue({
         isGifFavorite : function(gif) {
             var tweetId = app.getTweetId(gif.url)
             return app.favorites.indexOf(tweetId) != -1
+        },
+        showKeywords : function() {
+            $("#keywordsModal").modal();
+            $("#keywordsModal").modal('open')
+            $.get('/v1/keywords/top?top=10', function(data) {
+                app.keywords = data
+            })
+        },
+        searchForKeyword : function(keyword) {
+            this.searchQuery = keyword
+            this.sendRequest(this.limit, 0)
+            $("#keywordsModal").modal('close')
         }
     },
     mounted() {
@@ -166,3 +179,4 @@ var app = new Vue({
 app.searchQuery = ""
 app.sendRequest(app.limit, 0)
 $('select').formSelect();
+$('#menu').floatingActionButton();

@@ -14,13 +14,16 @@ import org.springframework.web.bind.annotation.*
 class KeyController {
 
     @GetMapping("/top")
-    fun getTopKeywords(@RequestParam("top") top: Int = 10): ResponseEntity<Map<String, Int>> {
+    fun getTopKeywords(@RequestParam("top", defaultValue = "10") top: Int = 10): ResponseEntity<Map<String, Int>> {
         val documents = LuceneRepository.query("keywords:* - deleted:true", Integer.MAX_VALUE, 0)
         val keywords = documents.content.map { it["keywords"].split(" ") }.flatten()
         val topN = keywords
+            .filter{ it != ""}
             .groupBy { it }
             .map { it.key to it.value.size }
+            .sortedByDescending { it.second }
             .take(top)
+            .toList()
             .toMap()
         return ok(topN)
     }
