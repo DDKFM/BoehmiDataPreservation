@@ -8,11 +8,13 @@ fun String.download() : ByteArray {
 }
 
 
-fun Long.getTweetUrl() : String {
-    return Twitter.doWithTwitter { this.showStatus(this@getTweetUrl).mediaEntities.map { it.expandedURL }.first() }
+fun Long.getTweetUrl() : String? {
+    return Twitter.doTryWithTwitter { this.showStatus(this@getTweetUrl).mediaEntities.map { it.expandedURL }.first() }
+        ?: ""
 }
 
-fun Long.getPosterUrl() : String {
-    return Twitter.doWithTwitter { this.showStatus(this@getPosterUrl).mediaEntities.map { it.mediaURLHttps}.first() }
+fun Long.getPosterUrl() : String? {
+    return Twitter.doTryWithTwitter { this.showStatus(this@getPosterUrl).mediaEntities.map { it.mediaURLHttps}.first() }
+        ?: ""
 }
 

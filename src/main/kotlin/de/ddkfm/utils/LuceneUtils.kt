@@ -1,5 +1,6 @@
 package de.ddkfm.utils
 
+import com.google.common.cache.Cache
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.TextField

@@ -32,4 +32,11 @@ object Twitter {
             Thread.sleep(500)
         return twitter.doThings()
     }
+    fun <T> doTryWithTwitter(doThings : Twitter.() -> T) : T? {
+        return try {
+            this.doWithTwitter(doThings)
+        } catch (e : Exception) {
+            null
+        }
+    }
 }
