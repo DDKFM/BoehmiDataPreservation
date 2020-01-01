@@ -6,7 +6,7 @@
 
     <groupId>de.ddkfm</groupId>
     <artifactId>boehmiaatapreservation</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
 
     <parent>
@@ -27,6 +27,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jetty</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
@@ -122,8 +132,11 @@
                         <image>library/openjdk:13-alpine</image>
                     </from>
                     <to>
-                        <image>ddkfm/${project.artifactId}:${project.version}</image>
-                        <image>ddkfm/${project.artifactId}:latest</image>
+                        <image>ddkfm/${project.artifactId}</image>
+                        <tags>
+                            <tag>${project.version}</tag>
+                            <tag>latest</tag>
+                        </tags>
                     </to>
                     <container>
                         <jvmFlags>

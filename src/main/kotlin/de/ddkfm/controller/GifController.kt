@@ -6,7 +6,6 @@ import de.ddkfm.models.Gif
 import de.ddkfm.utils.appendOrCreate
 import de.ddkfm.utils.create
 import de.ddkfm.utils.toGifMetaData
-import org.apache.tomcat.util.http.fileupload.IOUtils
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.*
 import org.springframework.web.bind.annotation.*
@@ -28,7 +27,8 @@ class GifController {
         val document = LuceneRepository.searchForId(tweetId)
         val gif = GifRepository.findById(tweetId)
         response.contentType = "video/mp4"
-        IOUtils.copy(gif, response.outputStream)
+        if(gif == null) return
+        response.outputStream.write(gif.readBytes())
     }
 
     @PostMapping("/gifs/{tweetId}/keywords")
