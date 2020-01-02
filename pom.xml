@@ -6,7 +6,7 @@
 
     <groupId>de.ddkfm</groupId>
     <artifactId>boehmiaatapreservation</artifactId>
-    <version>1.1.2</version>
+    <version>1.2.0</version>
 
 
     <parent>
@@ -134,7 +134,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>library/openjdk:13-alpine</image>
+                        <image>ddkfm/openjdkwithffmpeg</image>
                     </from>
                     <to>
                         <image>ddkfm/${project.artifactId}</image>
@@ -150,6 +150,7 @@
                         <environment>
                             <LUCENE_INDEX_LOCATION>/data/lucene_index</LUCENE_INDEX_LOCATION>
                             <GIF_LOCATION>/data/gifs</GIF_LOCATION>
+                            <VIDEO_LOCATION>/data/videos</VIDEO_LOCATION>
                         </environment>
                     </container>
                 </configuration>

@@ -17,7 +17,7 @@ var app = new Vue({
         showOnlyFavorites : false,
         keywords : {},
         users : {},
-        displayGifs : true
+        displayGifs : false
     },
     methods : {
         sendRequest : function (limit, page) {
