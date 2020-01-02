@@ -16,7 +16,8 @@ var app = new Vue({
         parameters : {},
         showOnlyFavorites : false,
         keywords : {},
-        users : {}
+        users : {},
+        displayGifs : true
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -70,11 +71,11 @@ var app = new Vue({
                 }
             });
         },
-        getImageData : function(url) {
-            return url + "/data"
+        getImageData : function(url, type) {
+            return url + (type == "gif" ? "/gifdata" : "/data")
         },
-        getImageFilename : function(url) {
-            return url.replace('/v1/gifs/', '') + ".mp4"
+        getImageFilename : function(url, type) {
+            return url.replace('/v1/gifs/', '') + "." + type
         },
         getTweetId : function(url) {
             return url.replace('/v1/gifs/', '')
@@ -183,7 +184,10 @@ var app = new Vue({
                         app.searchQuery = e
                         app.sendRequest(10, 0)
                     }
-                });
+                }).focus(function () {
+                    console.log('blub')
+                        $(this).autocomplete('open')
+                    });;
             })
         },
         pageBorder : function() {
@@ -204,10 +208,16 @@ var app = new Vue({
         if (localStorage.favorites) {
             this.favorites = JSON.parse(localStorage.favorites);
         }
+        if(localStorage.displayGifs) {
+            this.displayGifs = localStorage.displayGifs
+        }
     },
     watch: {
         favorites(favorites) {
             localStorage.favorites= JSON.stringify(this.favorites);
+        },
+        displayGifs(gifs) {
+            localStorage.displayGifs = this.displayGifs
         }
     }
 });

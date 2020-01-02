@@ -62,6 +62,13 @@
                             <i class="fa fa-tags"></i>
                         </a>
                     </li>
+                    <li>
+                        <a class="hidden btn-floating btnwaves-effect waves-light blue"
+                           v-on:click="displayGifs=!displayGifs"
+                           v-bind:title="[displayGifs ? 'GIFs werden als GIF angezeigt' : 'GIFs werden als Video angezeigt']">
+                            <i class="fa" v-bind:class="[displayGifs ? 'fa-picture-o' : 'fa-video-camera']"></i>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -92,11 +99,17 @@
         <div class="row">
             <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
                 <div class="card-content">
+
                     <video autoplay loop autobuffer muted
                            width="100%"
                            v-bind:poster="gif.posterUrl"
-                           v-bind:src="getImageData(gif.url)"
-                           type="video/mp4"></video><br>
+                           v-bind:src="getImageData(gif.url, 'mp4')"
+                           type="video/mp4" v-if="!displayGifs">
+                    </video><br>
+                    <picture v-if="displayGifs" width="100%">
+                        <source v-bind:srcset="getImageData(gif.url, 'gif')" type="image/gif">
+                        <img v-bind:src="getImageData(gif.url, 'gif')" alt="GIF" width="100%">
+                    </picture>
                     <div class="chips">
                         <div class="chip" v-for="keyword in gif.keywords">
                             {{ keyword }}
@@ -109,9 +122,15 @@
                     <a v-on:click="addAsFavorite(gif)" title="Favorit">
                         <i class="fa fa-star" v-bind:class="[isGifFavorite(gif) ? 'isFavorite' : '']"></i>
                     </a>
-                    <a v-bind:href="getImageData(gif.url)"
-                       v-bind:download="getImageFilename(gif.url)">
+                    <a v-bind:href="getImageData(gif.url, 'mp4')"
+                       v-bind:download="getImageFilename(gif.url, 'mp4')"
+                        title="als Video downloaden">
                         <i class="fa fa-download"></i>
+                    </a>
+                    <a v-bind:href="getImageData(gif.url, 'gif')"
+                       v-bind:download="getImageFilename(gif.url, 'gif')"
+                        title="als GIF downloaden">
+                        <i class="fa fa-picture-o" style="color: green"></i>
                     </a>
                     <a v-bind:href="gif.tweetUrl"
                        title="Link zum Tweet" target="_blank">
@@ -146,10 +165,12 @@
                         <i class="material-icons">chevron_left</i>
                     </a>
                 </li>
-                <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
-                    <a v-on:click="sendRequest(limit, page - 1)">
-                        {{ page - 1 }}
+                <li v-for="page in pageBorder()" v-bind:class="[page == currentPage ? 'active blue' : 'waves-effect']">
+                    <b v-if="page == pageCount - 1">|</b>
+                    <a v-on:click="sendRequest(limit, page)">
+                        {{ page }}
                     </a>
+                    <b v-if="page == 0">|</b>
                 </li>
                 <li class="waves-effect" v-if="pageCount">
                     <a v-on:click="sendRequest(limit, nextPage())">
