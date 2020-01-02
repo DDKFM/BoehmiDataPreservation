@@ -177,6 +177,7 @@ var app = new Vue({
                 console.log(twitterUsers)
                 $('input.autocomplete').autocomplete({
                     data: twitterUsers,
+                    minChars: 0,
                     onAutocomplete : function(e) {
                         console.log(e)
                         app.searchQuery = e
