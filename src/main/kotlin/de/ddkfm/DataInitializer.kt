@@ -20,6 +20,8 @@ class DataInitializer : CommandLineRunner {
     }
 
     fun scanTwitterUsers() {
+        println("convertAllGifs")
+        GifRepository.convertAllFiles()
         println("cache Twitter Users")
         val users = System.getenv("TWITTER_USERS")?.split(",") ?: emptyList()
         for(user in users) {
@@ -30,12 +32,11 @@ class DataInitializer : CommandLineRunner {
         }
     }
 
-
     fun twitter4j.Twitter.indexTweetsFromUser(user : String) {
         val userObj = this.users().showUser(user)
         LuceneRepository.userCache.put(user, userObj)
         var page = 1
-        var nullCounter = 0;
+        var nullCounter = 0
         while(true) {
             try {
                 val timeline = this.timelines().getUserTimeline(user, Paging(page, 500))

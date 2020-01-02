@@ -29,6 +29,7 @@ object LuceneRepository  {
         .build<String, User>()
     val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
     val path = Paths.get(luceneLocation)
+    val lock = ReentrantLock()
     private val directory = FSDirectory.open(path)
     val analyzer by lazy {
         val builder = CustomAnalyzer
@@ -74,9 +75,8 @@ object LuceneRepository  {
     }
 
     private fun <T> doWithWriter(func : IndexWriter.() -> T) : T {
-        val writer = IndexWriter(directory, IndexWriterConfig(analyzer))
-        val lock = ReentrantLock()
         lock.lock()
+        val writer = IndexWriter(directory, IndexWriterConfig(analyzer))
         try {
             return writer.use(func)
         } finally {

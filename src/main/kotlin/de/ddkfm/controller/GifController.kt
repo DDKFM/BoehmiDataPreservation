@@ -31,6 +31,15 @@ class GifController {
         response.outputStream.write(gif.readBytes())
     }
 
+    @GetMapping("/gifs/{tweetId}/gifdata")
+    fun getGifAsRealGif(@PathVariable("tweetId") tweetId: Long, response : HttpServletResponse) {
+        val document = LuceneRepository.searchForId(tweetId)
+        val gif = GifRepository.findGifById( tweetId)
+        response.contentType = "image/gif"
+        if(gif == null) return
+        response.outputStream.write(gif.readBytes())
+    }
+
     @PostMapping("/gifs/{tweetId}/keywords")
     fun addKeywords(@PathVariable("tweetId") tweetId: Long,
                     @RequestBody keywords : List<String>
