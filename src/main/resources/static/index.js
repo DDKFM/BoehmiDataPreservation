@@ -37,6 +37,10 @@ var app = new Vue({
                 console.log(actualUsername)
                 query = "&username=" + actualUsername
                 url = "/v1/searchByUser"
+            } else if(app.searchQuery.match("\\d{5,}")) {
+                url = "/v1/searchByIds"
+                data = JSON.stringify([app.searchQuery])
+                method = "POST"
             }
             $.ajax({
                 type: method,
@@ -209,14 +213,14 @@ var app = new Vue({
             this.favorites = JSON.parse(localStorage.favorites);
         }
         if(localStorage.displayGifs) {
-            this.displayGifs = localStorage.displayGifs
+            this.displayGifs = localStorage.displayGifs == 'true'
         }
     },
     watch: {
         favorites(favorites) {
             localStorage.favorites= JSON.stringify(this.favorites);
         },
-        displayGifs(gifs) {
+        displayGifs(displayGifs) {
             localStorage.displayGifs = this.displayGifs
         }
     }
