@@ -75,10 +75,12 @@
                         <i class="material-icons">chevron_left</i>
                     </a>
                 </li>
-                <li v-for="page in pageCount" v-bind:class="[page - 1 == currentPage ? 'active blue' : 'waves-effect']">
-                    <a v-on:click="sendRequest(limit, page - 1)">
-                        {{ page - 1 }}
+                <li v-for="page in pageBorder()" v-bind:class="[page == currentPage ? 'active blue' : 'waves-effect']">
+                    <b v-if="page == pageCount - 1">|</b>
+                    <a v-on:click="sendRequest(limit, page)">
+                        {{ page }}
                     </a>
+                    <b v-if="page == 0">|</b>
                 </li>
                 <li class="waves-effect" v-if="pageCount">
                     <a v-on:click="sendRequest(limit, nextPage())">

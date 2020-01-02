@@ -184,10 +184,20 @@ var app = new Vue({
                     }
                 });
             })
+        },
+        pageBorder : function() {
+            var pages = [0]
+            var currentPage = app != undefined ? app.currentPage : 0
+            var lastPage = app != undefined ? app.pageCount - 1 : 0
+            range(11, currentPage - 5)
+                .filter(i => i > 0)
+                .filter(i => i < lastPage)
+                .forEach(i => pages.push(i))
+            pages.push(lastPage)
+            return pages
         }
     },
     mounted() {
-        console.log(this.$route)
         this.parameters = this.$route.query
         //console.log(parameters)
         if (localStorage.favorites) {
@@ -201,6 +211,9 @@ var app = new Vue({
     }
 });
 
+function range(size, startAt = 0) {
+    return [...Array(size).keys()].map(i => i + startAt);
+}
 app.searchQuery = ""
 app.sendRequest(app.limit, 0)
 $('select').formSelect();
