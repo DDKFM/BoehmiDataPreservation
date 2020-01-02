@@ -1,9 +1,7 @@
 package de.ddkfm
 
-import twitter4j.RateLimitStatusEvent
-import twitter4j.RateLimitStatusListener
+import twitter4j.*
 import twitter4j.Twitter
-import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import java.util.concurrent.locks.ReentrantLock
 
@@ -37,6 +35,11 @@ object Twitter {
             this.doWithTwitter(doThings)
         } catch (e : Exception) {
             null
+        }
+    }
+    fun getUser(user : String) : User? {
+        return this.doTryWithTwitter {
+            this.users().showUser(user)
         }
     }
 }

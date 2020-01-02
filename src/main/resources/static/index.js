@@ -15,7 +15,8 @@ var app = new Vue({
         favorites : [],
         parameters : {},
         showOnlyFavorites : false,
-        keywords : {}
+        keywords : {},
+        users : {}
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -29,6 +30,12 @@ var app = new Vue({
                 url = "/v1/searchByIds"
                 data = JSON.stringify(app.favorites)
                 method = "POST"
+            } else if(app.searchQuery.startsWith("@")) {
+                var actualName = app.searchQuery.replace('@', '')
+                var actualUsername = app.users.find(user => user.name == actualName).username
+                console.log(actualUsername)
+                query = "&username=" + actualUsername
+                url = "/v1/searchByUser"
             }
             $.ajax({
                 type: method,
@@ -159,6 +166,24 @@ var app = new Vue({
             this.searchQuery = keyword
             this.sendRequest(this.limit, 0)
             $("#keywordsModal").modal('close')
+        },
+        fillAutocomplete : function() {
+            $.get('/v1/users', function(response) {
+                app.users = response
+                var twitterUsers = {}
+                app.users.forEach(user => {
+                    twitterUsers['@' + user.name] = user.profileImage
+                });
+                console.log(twitterUsers)
+                $('input.autocomplete').autocomplete({
+                    data: twitterUsers,
+                    onAutocomplete : function(e) {
+                        console.log(e)
+                        app.searchQuery = e
+                        app.sendRequest(10, 0)
+                    }
+                });
+            })
         }
     },
     mounted() {
@@ -180,3 +205,4 @@ app.searchQuery = ""
 app.sendRequest(app.limit, 0)
 $('select').formSelect();
 $('#menu').floatingActionButton();
+app.fillAutocomplete()

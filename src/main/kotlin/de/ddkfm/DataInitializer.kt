@@ -32,6 +32,8 @@ class DataInitializer : CommandLineRunner {
 
 
     fun twitter4j.Twitter.indexTweetsFromUser(user : String) {
+        val userObj = this.users().showUser(user)
+        LuceneRepository.userCache.put(user, userObj)
         var page = 1
         var nullCounter = 0;
         while(true) {

@@ -16,16 +16,13 @@
 
 
 .section-search input.autocomplete {
-    color: #fff;
+    color: #55ACEE;
 }
 .input-field .prefix.active {
-    color: #fff!important;
+    color: #55ACEE!important;
 }
 .dropdown-content li>a, .dropdown-content li>span {
-    color: #fff!important;
-}
-.autocomplete-content li .highlight {
-    color: red!important;
+    color: #55ACEE!important;
 }
 .github-corner > svg {
     left:0;

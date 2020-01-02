@@ -31,6 +31,24 @@ class SearchController {
         )
     }
 
+    @GetMapping("/searchByUser")
+    fun searchByUser(
+        @RequestParam("username", defaultValue = "") username: String = "",
+        @RequestParam("limit", defaultValue = "50") limit : Int = 50,
+        @RequestParam("offset", defaultValue = "0") offset : Int = 0
+    ): ResponseEntity<GifSearchResponse> {
+        val documents = LuceneRepository.query("user:$username - deleted:true", limit, offset)
+        val gifs = documents.content.map(Document::toGifMetaData)
+        return ok(
+            GifSearchResponse(
+                count = documents.hits,
+                limit = limit,
+                offset = offset,
+                gifs = gifs
+            )
+        )
+    }
+
     @PostMapping("/searchByIds")
     fun searchByIds(
         @RequestBody(required = false) ids : List<String>?,

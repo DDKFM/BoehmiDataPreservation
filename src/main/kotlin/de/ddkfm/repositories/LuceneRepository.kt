@@ -1,6 +1,7 @@
 package de.ddkfm.repositories
 
 import com.google.common.cache.CacheBuilder
+import de.ddkfm.Twitter
 import de.ddkfm.utils.create
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.de.GermanAnalyzer
@@ -12,6 +13,7 @@ import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.FSDirectory
+import twitter4j.User
 import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 
@@ -22,6 +24,9 @@ object LuceneRepository  {
     val posterCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .build<Long, String?>()
+    val userCache = CacheBuilder.newBuilder()
+        .maximumSize(10)
+        .build<String, User>()
     val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
     val path = Paths.get(luceneLocation)
     private val directory = FSDirectory.open(path)
