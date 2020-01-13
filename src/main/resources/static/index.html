@@ -36,6 +36,28 @@
             <a href="#!" class="modal-close waves-effect waves-green btn-flat">Schließen</a>
         </div>
     </div>
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="row">
+                <div class="col-sm-2 col-sm-offset-5 text-center">
+                    <img src="/android-chrome-192x192.png" center-align />
+                </div>
+            </div>
+            <div class="row">
+                <p>
+                    neomagazinultras.de ist eine Fanseite für alle Anhänger des Böhmi-Fandoms.
+                    Diese Webseite durchsucht Timelines von bestimmten bekannten Twitter-Users,
+                    speichert sich den Text der Tweets sowie das zugehörige GIF in einer Lucene
+                    Datenbank und zieht diese dann auf dieser Webseite an.
+
+                    Logo by <a href="https://twitter.com/Icanfindafaith">@Icanfindafaith</a>
+                </p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Schließen</a>
+        </div>
+    </div>
     <nav class="transparent">
         <div class="row">
             <div class="col s1"></div>
@@ -67,6 +89,11 @@
                            v-on:click="displayGifs=!displayGifs"
                            v-bind:title="[displayGifs ? 'GIFs werden als GIF angezeigt' : 'GIFs werden als Video angezeigt']">
                             <i class="fa" v-bind:class="[displayGifs ? 'fa-picture-o' : 'fa-video-camera']"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="hidden btn-floating btnwaves-effect waves-light blue" title="Tap" v-on:click="showAbout()">
+                            <i class="fa fa-info"></i>
                         </a>
                     </li>
                 </ul>

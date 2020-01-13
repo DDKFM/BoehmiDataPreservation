@@ -167,6 +167,10 @@ var app = new Vue({
                 app.keywords = data
             })
         },
+        showAbout: function() {
+            $("#aboutModal").modal();
+            $("#aboutModal").modal('open')
+        },
         searchForKeyword : function(keyword) {
             this.searchQuery = keyword
             this.sendRequest(this.limit, 0)
