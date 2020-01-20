@@ -1,14 +1,9 @@
 package de.ddkfm.repositories
 
 import com.google.common.cache.CacheBuilder
-import de.ddkfm.Twitter
 import de.ddkfm.utils.create
 import org.apache.lucene.analysis.custom.CustomAnalyzer
-import org.apache.lucene.analysis.de.GermanAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.document.Field
-import org.apache.lucene.document.StringField
-import org.apache.lucene.document.TextField
 import org.apache.lucene.index.*
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
 import org.apache.lucene.search.*
@@ -19,10 +14,10 @@ import java.util.concurrent.locks.ReentrantLock
 
 object LuceneRepository  {
     val urlCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(5000)
         .build<Long, String?>()
     val posterCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(5000)
         .build<Long, String?>()
     val userCache = CacheBuilder.newBuilder()
         .maximumSize(10)
