@@ -211,8 +211,13 @@ var app = new Vue({
         }
     },
     mounted() {
-        this.parameters = this.$route.query
-        //console.log(parameters)
+        parameters = this.$route.query
+        if(parameters.query != undefined) {
+            this.searchQuery = parameters.query
+        } else {
+            this.searchQuery = ''
+        }
+
         if (localStorage.favorites) {
             this.favorites = JSON.parse(localStorage.favorites);
         }
@@ -233,8 +238,7 @@ var app = new Vue({
 function range(size, startAt = 0) {
     return [...Array(size).keys()].map(i => i + startAt);
 }
-app.searchQuery = ""
-app.sendRequest(app.limit, 0)
+app.sendRequest(app.limit, app.currentPage)
 $('select').formSelect();
 $('#menu').floatingActionButton();
 app.fillAutocomplete()
