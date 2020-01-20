@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
 
     <link rel="shortcut icon" href="/icons/196.png" sizes="196x196">
     <link rel="shortcut icon" href="/icons/32.png" sizes="32x32">
@@ -169,6 +170,10 @@
                        v-bind:download="getImageFilename(gif.url, 'gif')"
                         title="als GIF downloaden">
                         <i class="fa fa-picture-o" style="color: green"></i>
+                    </a>
+                    <a v-bind:data-clipboard-text="getWebUrl(gif)" v-on:click="copyToClipboard(gif)"
+                       title="copy Link" class="clipboard-element">
+                        <i class="fa fa-clipboard" style="color: lightgray"></i>
                     </a>
                     <a v-bind:href="gif.tweetUrl"
                        title="Link zum Tweet" target="_blank">

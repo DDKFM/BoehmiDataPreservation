@@ -81,6 +81,13 @@ var app = new Vue({
         getImageFilename : function(url, type) {
             return url.replace('/v1/gifs/', '') + "." + type
         },
+        getWebUrl : function(gif) {
+            var tweetId = app.getTweetId(gif.url)
+            return window.location.origin + '/?query=' + tweetId
+        },
+        copyToClipboard : function(gif) {
+            M.toast({html: 'Link in Zwischenablage kopiert'})
+        },
         getTweetId : function(url) {
             return url.replace('/v1/gifs/', '')
         },
@@ -242,3 +249,4 @@ app.sendRequest(app.limit, app.currentPage)
 $('select').formSelect();
 $('#menu').floatingActionButton();
 app.fillAutocomplete()
+new ClipboardJS('.clipboard-element');
