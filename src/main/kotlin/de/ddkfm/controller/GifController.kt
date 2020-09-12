@@ -1,7 +1,5 @@
 package de.ddkfm.controller
 
-import com.vladsch.kotlin.jdbc.sqlQuery
-import com.vladsch.kotlin.jdbc.usingDefault
 import de.ddkfm.models.Gif
 import de.ddkfm.repositories.GifRepository
 import de.ddkfm.repositories.LuceneRepository
