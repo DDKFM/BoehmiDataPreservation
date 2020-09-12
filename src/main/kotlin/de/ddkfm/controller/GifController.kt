@@ -1,9 +1,10 @@
 package de.ddkfm.controller
 
+import com.vladsch.kotlin.jdbc.sqlQuery
+import com.vladsch.kotlin.jdbc.usingDefault
+import de.ddkfm.models.Gif
 import de.ddkfm.repositories.GifRepository
 import de.ddkfm.repositories.LuceneRepository
-import de.ddkfm.models.Gif
-import de.ddkfm.utils.appendOrCreate
 import de.ddkfm.utils.create
 import de.ddkfm.utils.toGifMetaData
 import org.springframework.http.ResponseEntity
@@ -22,9 +23,15 @@ class GifController {
         return ok(document.toGifMetaData())
     }
 
+    @GetMapping("/gifs/random")
+    fun getRandomGif() : ResponseEntity<Gif> {
+        val documents = LuceneRepository.query("tweet:* OR keywords:* - deleted:true", 1000, 0)
+        val document = documents.content.random()
+        return ok(document.toGifMetaData())
+    }
+
     @GetMapping("/gifs/{tweetId}/data")
     fun getGif(@PathVariable("tweetId") tweetId: Long, response : HttpServletResponse) {
-        val document = LuceneRepository.searchForId(tweetId)
         val gif = GifRepository.findById(tweetId)
         response.contentType = "video/mp4"
         if(gif == null) return
@@ -44,7 +51,7 @@ class GifController {
     fun addKeywords(@PathVariable("tweetId") tweetId: Long,
                     @RequestBody keywords : List<String>
     ) : ResponseEntity<String> {
-        var document = LuceneRepository.searchForId(tweetId)
+        LuceneRepository.searchForId(tweetId)
             ?: return badRequest().build()
         LuceneRepository.update(tweetId) {
             create("keywords", keywords.joinToString(separator = " "))
@@ -54,11 +61,10 @@ class GifController {
 
     @DeleteMapping("/gifs/{tweetId}")
     fun deleteGif(@PathVariable("tweetId") tweetId : Long) : ResponseEntity<Boolean> {
-        var document = LuceneRepository.searchForId(tweetId)
+        LuceneRepository.searchForId(tweetId)
             ?: return badRequest().build()
         return ok(
             LuceneRepository.delete(tweetId)?.get("deleted")?.contentEquals("true") != null
         )
     }
-
 }
