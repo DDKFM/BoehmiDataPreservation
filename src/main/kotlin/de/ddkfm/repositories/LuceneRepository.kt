@@ -80,11 +80,11 @@ object LuceneRepository  {
     }
 
     fun query(query : String, limit : Int, offset : Int) : LuceneResponse<List<Document>> {
-        val query1 = StandardQueryParser(analyzer).apply {
+        val query = StandardQueryParser(analyzer).apply {
             allowLeadingWildcard = true
         }.parse(query, "tweet")
         return doWithReader {
-            val searchResult = query(query1)
+            val searchResult = query(query)
             val pagedResults = searchResult
                 .scoreDocs
                 .drop(offset)
@@ -135,7 +135,7 @@ object LuceneRepository  {
             ?: return null
         existing.apply(func)
         return doWithWriter {
-            val documentId = this.updateDocument(Term("twitterId", "$id"), existing)
+            this.updateDocument(Term("twitterId", "$id"), existing)
             searchForId(id)
         }
     }
@@ -149,7 +149,7 @@ object LuceneRepository  {
     fun create(id : Long, func : Document.() -> Unit) : Document? {
         val document = Document().apply(func)
         return doWithWriter {
-            val documentId = this.addDocument(document)
+            this.addDocument(document)
             searchForId(id)
         }
     }
