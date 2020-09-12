@@ -1,6 +1,5 @@
 package de.ddkfm.utils
 
-import de.ddkfm.Twitter
 import de.ddkfm.models.Gif
 import de.ddkfm.models.TwitterUser
 import de.ddkfm.repositories.LuceneRepository
@@ -12,9 +11,9 @@ fun Document.toGifMetaData() : Gif {
     val otherTwitterUrls = this.get("sameTweetIds")
         .split(" ")
         .filter { it != "" }
-        .map { tweetId ->
-            val tweetId = tweetId.toLong()
-            LuceneRepository.urlCache.get(tweetId) { tweetId.getTweetUrl()}
+        .map { id ->
+            val tweetIdInt = id.toLong()
+            LuceneRepository.urlCache.get(tweetIdInt) { tweetIdInt.getTweetUrl()}
         }
     return Gif(
         url = "/v1/gifs/$tweetId",
