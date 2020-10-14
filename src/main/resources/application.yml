@@ -6,6 +6,7 @@ server:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 1024
+
 spring:
   jackson:
     mapper:
@@ -13,11 +14,33 @@ spring:
     serialization:
       indent_output: true
       WRITE_DATES_AS_TIMESTAMPS: false
+      WRITE_EMPTY_JSON_ARRAYS: true
     deserialization:
       FAIL_ON_IGNORED_PROPERTIES: false
       FAIL_ON_UNKNOWN_PROPERTIES: false
       ACCEPT_SINGLE_VALUE_AS_ARRAY: true
-    default-property-inclusion: non_empty
+    default-property-inclusion: always
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:boehmidatapreservation}
+    username: ${DATABASE_USERNAME:boehmidatapreservation}
+    password: ${DATABASE_PASSWORD:boehmidatapreservation}
+  jpa:
+    show_sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      # fixes Caused by: java.sql.SQLFeatureNotSupportedException: Method org.postgresql.jdbc.PgConnection.createClob() is not yet implemented.
+      hibernate.jdbc.lob.non_contextual_creation: true
+
+  data:
+    jpa:
+      repositories.enabled: true
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+  api-docs:
+    path: /openapi
 logging:
   level:
     org.springframework.web: INFO
