@@ -2,19 +2,13 @@ package de.ddkfm.utils
 
 import de.ddkfm.Twitter
 import kong.unirest.Unirest
+import twitter4j.Status
 
-fun String.download() : ByteArray {
-    return Unirest.get(this).asBytes().body
+fun Status.download() : ByteArray? {
+    val url = this.mediaEntities
+        .map { it.videoVariants.map { it.url } }
+        .flatten()
+        .firstOrNull()
+        ?: return null
+    return Unirest.get(url).asBytes().body
 }
-
-
-fun Long.getTweetUrl() : String? {
-    return Twitter.doTryWithTwitter { this.showStatus(this@getTweetUrl).mediaEntities.map { it.expandedURL }.first() }
-        ?: ""
-}
-
-fun Long.getPosterUrl() : String? {
-    return Twitter.doTryWithTwitter { this.showStatus(this@getPosterUrl).mediaEntities.map { it.mediaURLHttps}.first() }
-        ?: ""
-}
-

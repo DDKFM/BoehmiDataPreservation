@@ -1,39 +1,34 @@
 package de.ddkfm.utils
 
-import de.ddkfm.models.Gif
-import de.ddkfm.models.TwitterUser
-import de.ddkfm.repositories.LuceneRepository
-import org.apache.lucene.document.Document
-import twitter4j.User
+import de.ddkfm.jpa.models.Gif
+import de.ddkfm.jpa.models.Tweet
+import de.ddkfm.jpa.models.Tweeter
+import de.ddkfm.models.GifResponse
+import de.ddkfm.models.TweeterResponse
+import de.ddkfm.models.UserResponse
 
-fun Document.toGifMetaData() : Gif {
-    val tweetId = this.get("twitterId").toLong()
-    val otherTwitterUrls = this.get("sameTweetIds")
-        .split(" ")
-        .filter { it != "" }
-        .map { id ->
-            val tweetIdInt = id.toLong()
-            LuceneRepository.urlCache.get(tweetIdInt) { tweetIdInt.getTweetUrl()}
-        }
-    return Gif(
-        url = "/v1/gifs/$tweetId",
-        keywords = this.get("keywords").split(" "),
-        user = this.get("user"),
-        tweetUrl = this.get("twitterUrl"),
-        otherTweetUrls = otherTwitterUrls,
-        posterUrl = LuceneRepository.posterCache.get(tweetId) { tweetId.getPosterUrl()}
+fun Gif.toGifResponse() : GifResponse {
+    val firstTweet = tweets.first()
+    return GifResponse(
+        url = "/v1/gifs/$id",
+        keywords = this.keywords,
+        user = UserResponse(
+            name = firstTweet.user.name,
+            screenName = firstTweet.user.screenName
+        ),
+        tweetUrls = tweets.map { it.getTweetURL() },
+        posterUrl = this.posterUrl
     )
 }
+fun Tweet.getTweetURL() : String {
+    return "https://twitter.com/${user.screenName}/status/${tweetId}"
+}
 
-
-fun User.toTwitterUser() : TwitterUser {
-    return TwitterUser(
+fun Tweeter.toTwitterUser() : TweeterResponse {
+    return TweeterResponse(
         username = this.screenName,
         name = this.name,
-        description = this.description,
         accountLink = "https://twitter.com/${this.screenName}",
-        follower = this.followersCount,
-        profileImage = this.get400x400ProfileImageURLHttps()
-
+        profileImage = this.profileImage
     )
 }
