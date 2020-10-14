@@ -175,11 +175,7 @@
                        title="copy Link" class="clipboard-element">
                         <i class="fa fa-clipboard" style="color: lightgray"></i>
                     </a>
-                    <a v-bind:href="gif.tweetUrl"
-                       title="Link zum Tweet" target="_blank">
-                        <i class="fa fa-twitter"></i>
-                    </a>
-                    <a v-for="otherUrl in gif.otherTweetUrls"
+                    <a v-for="otherUrl in gif.tweetUrls"
                        v-bind:href="otherUrl"
                        title="Link zum Tweet" target="_blank">
                         <i class="fa fa-twitter otherTweet"></i>
@@ -191,7 +187,7 @@
                         <div class="modal-content">
                             <h4>Löschen von GIF {{ getTweetId(gif.url) }}</h4>
                             <p>Möchtest du dieses Gif wirklich löschen?</p>
-                        </div>
+                        </div><<
                         <div class="modal-footer">
                             <a class="modal-close waves-effect waves-light btn blue">Nicht löschen</a>
                             <a v-on:click="deleteGif(gif)" class="modal-close waves-effect waves-light btn red">Löschen</a>

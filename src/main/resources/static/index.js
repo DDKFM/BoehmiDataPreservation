@@ -37,7 +37,7 @@ var app = new Vue({
                 console.log(actualUsername)
                 query = "&username=" + actualUsername
                 url = "/v1/searchByUser"
-            } else if(app.searchQuery.match("\\d{5,}")) {
+            } else if(app.searchQuery.match("t\\d{5,}")) {
                 url = "/v1/searchByIds"
                 data = JSON.stringify([app.searchQuery])
                 method = "POST"
@@ -76,7 +76,7 @@ var app = new Vue({
             });
         },
         getImageData : function(url, type) {
-            return url + (type == "gif" ? "/gifdata" : "/data")
+            return url + "/data" + (type == "gif" ? "?type=image/gif" : "")
         },
         getImageFilename : function(url, type) {
             return url.replace('/v1/gifs/', '') + "." + type
@@ -170,7 +170,7 @@ var app = new Vue({
         showKeywords : function() {
             $("#keywordsModal").modal();
             $("#keywordsModal").modal('open')
-            $.get('/v1/keywords/top?top=10', function(data) {
+            $.get('/v1/stats/keywords?top=10', function(data) {
                 app.keywords = data
             })
         },
