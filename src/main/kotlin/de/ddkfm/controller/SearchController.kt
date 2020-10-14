@@ -1,17 +1,29 @@
 package de.ddkfm.controller
 
+import de.ddkfm.jpa.repos.GifRepository
+import de.ddkfm.jpa.repos.TweetRepository
+import de.ddkfm.models.GifResponse
 import de.ddkfm.repositories.LuceneRepository
 import de.ddkfm.models.GifSearchResponse
-import de.ddkfm.utils.toGifMetaData
+import de.ddkfm.utils.toGifResponse
 import org.apache.lucene.document.Document
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.ok
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 
 @RestController
 @RequestMapping("/v1")
 class SearchController {
+
+    @Autowired
+    lateinit var gifRepo : GifRepository
+
+    @Autowired
+    lateinit var tweetRepo : TweetRepository
 
     @GetMapping("/search")
     fun search(
@@ -19,14 +31,17 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ): ResponseEntity<GifSearchResponse> {
-        val documents = LuceneRepository.query("tweet:$query* OR keywords:$query* - deleted:true", limit, offset)
-        val gifs = documents.content.map(Document::toGifMetaData)
+        val count = gifRepo.getCountWhereDeletedIsFalse()
+        val gifs = if(query.isEmpty())
+            gifRepo.findByDeletedFalse(PageRequest.of(offset / limit, limit))
+        else
+            gifRepo.findByKeyword("%$query%", limit, offset)
         return ok(
             GifSearchResponse(
-                count = documents.hits,
+                count = count.toLong(),
                 limit = limit,
                 offset = offset,
-                gifs = gifs
+                gifs = gifs.map { it.toGifResponse() }
             )
         )
     }
@@ -37,14 +52,13 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ): ResponseEntity<GifSearchResponse> {
-        val documents = LuceneRepository.query("user:$username - deleted:true", limit, offset)
-        val gifs = documents.content.map(Document::toGifMetaData)
+        val gifs = gifRepo.findByUserName(username, PageRequest.of(offset, limit))
         return ok(
             GifSearchResponse(
-                count = documents.hits,
+                count = gifs.size.toLong(),
                 limit = limit,
                 offset = offset,
-                gifs = gifs
+                gifs = gifs.map { it.toGifResponse() }
             )
         )
     }
@@ -55,16 +69,16 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ) : ResponseEntity<GifSearchResponse> {
-        val tweetSearch = ids?.joinToString(separator = " or ") { "twitterId: $it" } ?: ""
-        val luceneQuery = "$tweetSearch - deleted:true"
-        println(luceneQuery)
-        val documents = LuceneRepository.query(luceneQuery, limit, offset)
+        val tweetIds = ids?.mapNotNull { it.toLongOrNull() } ?: emptyList()
+        val gifs = tweetRepo.findByTweetIdIn(tweetIds, PageRequest.of(offset, limit))
+            .map { it.gif }
+            .distinctBy { it.id }
         return ok(
             GifSearchResponse(
-                count = documents.hits,
+                count = gifs.size.toLong(),
                 limit = limit,
                 offset = offset,
-                gifs = documents.content.map(Document::toGifMetaData)
+                gifs = gifs.map { it.toGifResponse() }
             )
         )
     }

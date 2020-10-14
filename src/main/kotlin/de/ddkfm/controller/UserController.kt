@@ -1,31 +1,26 @@
 package de.ddkfm.controller
 
 import de.ddkfm.Twitter
-import de.ddkfm.repositories.GifRepository
+import de.ddkfm.jpa.repos.UserRepository
 import de.ddkfm.repositories.LuceneRepository
-import de.ddkfm.models.Gif
-import de.ddkfm.models.TwitterUser
-import de.ddkfm.utils.appendOrCreate
-import de.ddkfm.utils.create
-import de.ddkfm.utils.toGifMetaData
+import de.ddkfm.models.TweeterResponse
 import de.ddkfm.utils.toTwitterUser
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.*
 import org.springframework.web.bind.annotation.*
-import twitter4j.User
-import javax.servlet.http.HttpServletResponse
 
 
 @RestController
 @RequestMapping("/v1")
 class UserController {
 
+    @Autowired
+    lateinit var userRepo : UserRepository
     @GetMapping("/users")
-    fun getUsers() : ResponseEntity<List<TwitterUser>> {
-        val users = System.getenv("TWITTER_USERS")?.split(",") ?: emptyList()
-        val userObjects = users
-            .map { LuceneRepository.userCache.get(it) { Twitter.getUser(it) } }
+    fun getUsers() : ResponseEntity<List<TweeterResponse>> {
+        val users = userRepo.findAll()
             .map { it.toTwitterUser() }
-        return ok(userObjects)
+        return ok(users)
     }
 }
