@@ -1,29 +1,16 @@
 package de.ddkfm
 
+import de.ddkfm.twitter.StreamListener
 import twitter4j.*
 import twitter4j.Twitter
-import twitter4j.conf.ConfigurationBuilder
 import java.util.concurrent.locks.ReentrantLock
 
 object Twitter {
     private val twitter = TwitterFactory.getSingleton()
     val rateLimitLock = ReentrantLock()
-    val listener = twitter.addRateLimitStatusListener(object : RateLimitStatusListener {
-        override fun onRateLimitReached(p0: RateLimitStatusEvent?) {
-            println(p0)
-        }
-
-        override fun onRateLimitStatus(p0: RateLimitStatusEvent?) {
-            val remaining = p0?.rateLimitStatus?.remaining ?: return
-            println("rateLimit: $remaining")
-            if(remaining < 10) {
-                rateLimitLock.lock()
-            } else if(rateLimitLock.isLocked) {
-                rateLimitLock.unlock()
-            }
-        }
-
-    })
+    private val streamConnection by lazy {
+        TwitterStreamFactory.getSingleton()
+    }
 
      fun <T> doWithTwitter(doThings : Twitter.() -> T) : T  {
         while(rateLimitLock.isLocked)
@@ -37,14 +24,15 @@ object Twitter {
             null
         }
     }
-    fun getStatus(statusId : Long) : Status? {
-        return this.doTryWithTwitter {
-            this.showStatus(statusId)
-        }
-    }
-    fun getUser(user : String) : User? {
-        return this.doTryWithTwitter {
-            this.users().showUser(user)
+    fun stream(users : List<String> = emptyList(), streamFunction : Status.() -> Unit) {
+        val userIds = doWithTwitter { users.map { showUser(it).id } }
+        with(streamConnection) {
+            this.addListener(StreamListener(streamFunction))
+            val query = FilterQuery().apply {
+                if(userIds.isNotEmpty())
+                    follow(*userIds.toLongArray())
+            }
+            this.filter(query)
         }
     }
 }
