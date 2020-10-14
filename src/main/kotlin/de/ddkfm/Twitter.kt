@@ -25,7 +25,7 @@ object Twitter {
 
     })
 
-    fun <T> doWithTwitter(doThings : Twitter.() -> T) : T  {
+     fun <T> doWithTwitter(doThings : Twitter.() -> T) : T  {
         while(rateLimitLock.isLocked)
             Thread.sleep(500)
         return twitter.doThings()
@@ -35,6 +35,11 @@ object Twitter {
             this.doWithTwitter(doThings)
         } catch (e : Exception) {
             null
+        }
+    }
+    fun getStatus(statusId : Long) : Status? {
+        return this.doTryWithTwitter {
+            this.showStatus(statusId)
         }
     }
     fun getUser(user : String) : User? {
