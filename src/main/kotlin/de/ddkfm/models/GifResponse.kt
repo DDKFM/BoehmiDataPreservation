@@ -1,10 +1,9 @@
 package de.ddkfm.models
 
-data class Gif(
+data class GifResponse(
     val url : String,
-    val tweetUrl : String?,
     val posterUrl : String?,
-    val otherTweetUrls : List<String?>,
-    val user : String,
+    val tweetUrls : List<String>,
+    val user : UserResponse,
     val keywords : List<String>
 )

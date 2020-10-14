@@ -4,5 +4,5 @@ data class GifSearchResponse(
     val count : Long,
     val limit : Int,
     val offset : Int,
-    val gifs : List<Gif>
+    val gifs : List<GifResponse>
 )
