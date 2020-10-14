@@ -7,7 +7,7 @@ import net.bramp.ffmpeg.builder.FFmpegBuilder
 import java.io.File
 import java.io.InputStream
 
-object GifRepository {
+object FileRepository {
     private val gifsLocation = File(System.getenv("GIF_LOCATION") ?: "./gifs")
     private val videoLocation = File(System.getenv("VIDEO_LOCATION") ?: "./videos")
     init {
@@ -17,7 +17,7 @@ object GifRepository {
             videoLocation.mkdirs()
     }
 
-    fun findById(tweetId : Long) : InputStream? {
+    fun findById(tweetId : String) : InputStream? {
         val gif = File(videoLocation,"$tweetId.mp4")
         return if(gif.exists())
             gif.inputStream()
@@ -25,7 +25,7 @@ object GifRepository {
             null
     }
 
-    fun findGifById(tweetId : Long) : InputStream? {
+    fun findGifById(tweetId : String) : InputStream? {
         val gif = File(gifsLocation,"$tweetId.gif")
         return if(gif.exists())
             gif.inputStream()
@@ -43,6 +43,11 @@ object GifRepository {
             convertToGif(file, gif)
         }
     }
+    fun existsByGifId(gifId : String) : Boolean {
+        val videoFile = File(videoLocation, "$gifId.mp4")
+        val gifFile = File(gifsLocation, "$gifId.gif")
+        return videoFile.exists() && gifFile.exists()
+    }
     fun convertToGif(videoFile : File, gifFile : File) {
         println("convertFile $videoFile")
         val ffmpeg = FFmpeg("/usr/bin/ffmpeg")
@@ -50,6 +55,7 @@ object GifRepository {
 
         val builder = FFmpegBuilder()
             .setInput(videoFile.absolutePath)
+            .addExtraArgs("-r", "15")
             .overrideOutputFiles(true)
             .addOutput(gifFile.absolutePath)
             .setFormat("gif")
@@ -58,9 +64,16 @@ object GifRepository {
         executor.createJob(builder).run()
     }
 
-    fun storeGif(tweetId: Long, data : ByteArray) {
-        val videoFile = File(videoLocation,"$tweetId.mp4")
-        videoFile.writeBytes(data)
-        convertToGif(videoFile, File(gifsLocation,"$tweetId.gif"))
+    fun storeGif(gifId: String?, data : ByteArray) {
+        if(gifId == null)
+            return
+        val videoFile = File(videoLocation, "$gifId.mp4")
+        if(!videoFile.exists()) {
+            videoFile.writeBytes(data)
+        }
+        val gifFile = File(gifsLocation, "$gifId.gif")
+        if(!gifFile.exists()) {
+            convertToGif(videoFile, gifFile)
+        }
     }
 }
