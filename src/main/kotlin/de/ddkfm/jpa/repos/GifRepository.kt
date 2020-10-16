@@ -45,4 +45,6 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
         @Param("keyword") keywords: String,
         @Param("limit") limit : Int,
         @Param("offset") offset : Int) : List<Gif>
+
+    fun findByIdIn(id: List<String>, pageable: Pageable) : List<Gif>
 }

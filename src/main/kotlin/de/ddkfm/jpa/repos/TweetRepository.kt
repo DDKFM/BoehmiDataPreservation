@@ -14,8 +14,7 @@ interface TweetRepository : JpaRepository<Tweet, String> {
 
     fun findByTweetIdIn(tweetId: List<Long>, pageable: Pageable) : List<Tweet>
 
+
     @Query("SELECT h, count(h) FROM Tweet t JOIN t.hashtags h GROUP BY h")
     fun getTopHashtags(pageable: Pageable) : List<Array<Any>>
-
-    fun existsByTweetId(tweetId: Long) : Boolean
 }
