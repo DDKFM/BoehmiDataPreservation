@@ -37,7 +37,8 @@ var app = new Vue({
                 console.log(actualUsername)
                 query = "&username=" + actualUsername
                 url = "/v1/searchByUser"
-            } else if(app.searchQuery.match("t\\d{5,}")) {
+            } else if(app.searchQuery.match("\\d{5,}")
+                    || app.searchQuery.match('\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b')) {
                 url = "/v1/searchByIds"
                 data = JSON.stringify([app.searchQuery])
                 method = "POST"
