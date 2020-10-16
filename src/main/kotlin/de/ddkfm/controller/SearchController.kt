@@ -31,17 +31,17 @@ class SearchController {
         @RequestParam("limit", defaultValue = "50") limit : Int = 50,
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ): ResponseEntity<GifSearchResponse> {
-        val count = gifRepo.getCountWhereDeletedIsFalse()
+        val pageRequest = PageRequest.of(offset / limit, limit)
         val gifs = if(query.isEmpty())
-            gifRepo.findByDeletedFalse(PageRequest.of(offset / limit, limit))
+            gifRepo.findByDeletedFalse(pageRequest)
         else
-            gifRepo.findByKeyword("%$query%", limit, offset)
+            gifRepo.findByKeywordsContains(mutableListOf(query), pageRequest)
         return ok(
             GifSearchResponse(
-                count = count.toLong(),
+                count = gifs.totalElements,
                 limit = limit,
                 offset = offset,
-                gifs = gifs.map { it.toGifResponse() }
+                gifs = gifs.content.map { it.toGifResponse() }
             )
         )
     }
