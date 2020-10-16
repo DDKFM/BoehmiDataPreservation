@@ -70,13 +70,13 @@ class SearchController {
         @RequestParam("offset", defaultValue = "0") offset : Int = 0
     ) : ResponseEntity<GifSearchResponse> {
         val tweetIds = ids?.mapNotNull { it.toLongOrNull() } ?: emptyList()
-        val gifs = if(tweetIds != null) {
+        val gifs = if(tweetIds.isNotEmpty()) {
             tweetRepo.findByTweetIdIn(tweetIds, PageRequest.of(offset, limit))
                 .map { it.gif }
                 .distinctBy { it.id }
         } else {
             val ids = ids ?: emptyList()
-            gifRepo.findByIdIn(ids, PageRequest.of(offset, limit))
+            gifRepo.findByIdInAndDeletedFalse(ids, PageRequest.of(offset, limit))
         }
         return ok(
             GifSearchResponse(

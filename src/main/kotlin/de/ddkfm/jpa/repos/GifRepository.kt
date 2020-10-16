@@ -35,9 +35,12 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
             left join tweet_hashtags h on h.tweet_id = t.id
             left join gif_keywords k on g.id = k.gif_id
         WHERE
-            k.keywords like :keyword
-        or
-            h.hashtags like :keyword
+            g.deleted = 0
+        and (
+                k.keywords like :keyword
+            or
+                h.hashtags like :keyword
+        )
         LIMIT :limit
         OFFSET :offset
     """, nativeQuery = true)
@@ -46,5 +49,5 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
         @Param("limit") limit : Int,
         @Param("offset") offset : Int) : List<Gif>
 
-    fun findByIdIn(id: List<String>, pageable: Pageable) : List<Gif>
+    fun findByIdInAndDeletedFalse(id: List<String>, pageable: Pageable) : List<Gif>
 }
