@@ -1,6 +1,7 @@
 package de.ddkfm.repositories
 
 import com.google.common.cache.CacheBuilder
+import de.ddkfm.configuration.DataConfiguration
 import de.ddkfm.utils.create
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.document.Document
@@ -22,7 +23,7 @@ object LuceneRepository  {
     val userCache = CacheBuilder.newBuilder()
         .maximumSize(10)
         .build<String, User>()
-    val luceneLocation = System.getenv("LUCENE_INDEX_LOCATION") ?: "./lucene_index"
+    val luceneLocation = DataConfiguration.config.locations.lucene
     val path = Paths.get(luceneLocation)
     val lock = ReentrantLock()
     private val directory = FSDirectory.open(path)

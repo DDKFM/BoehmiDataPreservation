@@ -1,5 +1,6 @@
 package de.ddkfm
 
+import de.ddkfm.configuration.DataConfiguration
 import de.ddkfm.jpa.models.Gif
 import de.ddkfm.jpa.models.Tweet
 import de.ddkfm.jpa.models.Tweeter
@@ -36,9 +37,9 @@ class DataInitializer : CommandLineRunner {
     lateinit var userRepo : UserRepository
 
     override fun run(vararg args: String) {
-        val users = System.getenv("TWITTER_USERS")?.split(",") ?: emptyList()
+        val users = DataConfiguration.config.following.users
         Twitter.stream(users) { downloadContent(this)}
-        if(System.getenv("LUCENE_INDEX_LOCATION") != null)
+        if(DataConfiguration.config.locations.lucene != null)
             migrateLuceneToHibernate()
     }
     fun downloadContent(status : Status) {

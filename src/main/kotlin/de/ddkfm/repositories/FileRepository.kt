@@ -1,5 +1,6 @@
 package de.ddkfm.repositories
 
+import de.ddkfm.configuration.DataConfiguration
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
@@ -8,8 +9,8 @@ import java.io.File
 import java.io.InputStream
 
 object FileRepository {
-    private val gifsLocation = File(System.getenv("GIF_LOCATION") ?: "./gifs")
-    private val videoLocation = File(System.getenv("VIDEO_LOCATION") ?: "./videos")
+    private val gifsLocation = File(DataConfiguration.config.locations.gifs)
+    private val videoLocation = File(DataConfiguration.config.locations.videos)
     init {
         if(!gifsLocation.exists())
             gifsLocation.mkdirs()
