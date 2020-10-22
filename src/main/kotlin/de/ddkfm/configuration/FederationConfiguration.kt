@@ -1,6 +1,7 @@
 package de.ddkfm.configuration
 
-data class FederationConfiguration(
+data class FederationConfiguration (
     var id : String,
-    var secret : String
+    var secret : String,
+    var systems : List<FederationSystemConfiguration> = emptyList()
 )
