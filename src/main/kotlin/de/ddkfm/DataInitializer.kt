@@ -36,6 +36,9 @@ class DataInitializer : CommandLineRunner {
     @Autowired
     lateinit var userRepo : UserRepository
 
+    @Autowired
+    lateinit var statusUtils : StatusUtils
+
     override fun run(vararg args: String) {
         val users = DataConfiguration.config.following.users
         Twitter.stream(users) { downloadContent(this)}
@@ -44,7 +47,7 @@ class DataInitializer : CommandLineRunner {
     }
     fun downloadContent(status : Status) {
         if(status.mediaEntities.any { it.type == "animated_gif" }) {
-            status.toTweet()
+            statusUtils.toTweet(status)
         }
     }
 
@@ -83,72 +86,8 @@ class DataInitializer : CommandLineRunner {
             .filter { it != "neomagazin" }
             .map { it.toLowerCase() }
             .distinct()
-        val tweet = status.toTweet(keywords)
+        val tweet = statusUtils.toTweet(status, keywords)
             ?: return
         val gifId = tweet.gif.id ?: return
-    }
-
-    fun Status.toUser() : Tweeter {
-        return userRepo.findByUserId(this.user.id)
-            .orElseGet {
-                val user = Tweeter(
-                    userId = this.user.id,
-                    name = this.user.name,
-                    screenName = this.user.screenName,
-                    profileImage = this.user.get400x400ProfileImageURLHttps()
-                )
-                userRepo.save(user)
-                user
-            }
-    }
-    fun Date.toLocalDateTime() : LocalDateTime {
-        return this.toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
-    }
-    fun ByteArray.sha256() : String {
-        return DigestUtils.sha256Hex(this)
-    }
-    fun Status.toGif( keywords : List<String> = emptyList()) : Gif? {
-        val byteArray = this.download()
-            ?: return null
-        val hash = byteArray.sha256()
-        val gif = Optional.ofNullable(gifRepo.findByHash(hash).firstOrNull())
-            .orElseGet {
-                val gif = Gif(
-                    posterUrl = mediaEntities.map { it.mediaURLHttps}.first(),
-                    mediaUrl = mediaEntities.map { media ->
-                        media.videoVariants.map { it.url }
-                    }.flatten().first(),
-                    deleted = false,
-                    hash = hash,
-                    keywords = keywords.toMutableList()
-                )
-                gifRepo.save(gif)
-                gif
-            }
-        val gifId = gif.id ?: return null
-        if(!FileRepository.existsByGifId(gifId)) {
-            FileRepository.storeGif(gifId, byteArray)
-        }
-        return gif
-    }
-    fun Status.toTweet(keywords : List<String> = emptyList()) : Tweet? {
-        return tweetRepo.findByTweetId(this.id)
-            .orElseGet {
-                val gif = this.toGif(keywords = keywords)
-                    ?: return@orElseGet null
-                val tweet = Tweet(
-                    tweetId = this.id,
-                    user = this.toUser(),
-                    createdAt = this.createdAt.toLocalDateTime(),
-                    deletedOnTwitter = false,
-                    gif = gif,
-                    text = this.text,
-                    hashtags = this.hashtagEntities.map { it.text.toLowerCase() }.distinct().toMutableList()
-                )
-                tweetRepo.save(tweet)
-                tweet
-            }
     }
 }
