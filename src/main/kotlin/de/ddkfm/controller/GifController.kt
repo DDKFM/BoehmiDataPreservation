@@ -1,32 +1,47 @@
 package de.ddkfm.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import de.ddkfm.configuration.DataConfiguration
+import de.ddkfm.jpa.models.GifQueue
+import de.ddkfm.jpa.repos.GifQueueRepository
 import de.ddkfm.jpa.repos.GifRepository
 import de.ddkfm.jpa.repos.TweetRepository
+import de.ddkfm.models.GifRequest
 import de.ddkfm.models.GifResponse
 import de.ddkfm.repositories.FileRepository
-import de.ddkfm.repositories.LuceneRepository
-import de.ddkfm.utils.create
+import de.ddkfm.utils.sha256
 import de.ddkfm.utils.toGifResponse
+import kong.unirest.JsonNode
+import kong.unirest.Unirest
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.*
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import javax.servlet.http.HttpServletResponse
+import java.time.LocalDateTime
 
 
 @RestController
 @RequestMapping("/v1")
 class GifController {
 
+    companion object {
+        private const val FEDERATED_ID_HEADER = "X-FEDERATED-ID"
+        private const val FEDERATED_SECRET_HEADER = "X-FEDERATED-SECRET"
+    }
     @Autowired
     lateinit var gifRepo : GifRepository
 
     @Autowired
     lateinit var tweetRepo : TweetRepository
+
+    @Autowired
+    lateinit var queueRepo : GifQueueRepository
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     @GetMapping("/gifs/{id}")
     fun getGifMetadata(@PathVariable("id") id: String) : ResponseEntity<GifResponse> {
@@ -68,5 +83,52 @@ class GifController {
         gif.deleted = true
         gifRepo.save(gif)
         return ok(true)
+    }
+    @PostMapping("/gifs")
+    fun addGif(@RequestBody gif : GifRequest,
+               @RequestHeader(FEDERATED_SECRET_HEADER, required = false) federatedSecret : String?,
+               @RequestHeader(FEDERATED_ID_HEADER, required = false) federatedId : String?) : ResponseEntity<String> {
+
+        var accepted = false
+        if(federatedId != null && federatedSecret != null) {
+            val federationSystem = DataConfiguration.config.federation.systems.firstOrNull { it.id == federatedId }
+            if(federationSystem == null || federationSystem.secret != federatedSecret.sha256())
+                return badRequest().build()
+            accepted = true
+        }
+
+        val gifQueueEntry = GifQueue(tweetIds = gif.tweetIds.mapNotNull { it.toLongOrNull() }.toMutableList(),
+            keywords = gif.keywords.toMutableList(),
+            accepted = accepted,
+            created = LocalDateTime.now()
+        )
+        queueRepo.save(gifQueueEntry)
+        return ok("")
+    }
+
+    @PutMapping("/gifs/{id}")
+    fun moveGif(@PathVariable("id") id: String,
+                    @RequestBody federationSystemId : String
+    ) : ResponseEntity<Boolean> {
+        val gif = gifRepo.findById(id).orElse(null)
+            ?: return notFound().build()
+        try {
+            val federationSystem = DataConfiguration.config.federation.systems.firstOrNull { it.id == federationSystemId }
+                ?: return notFound().build()
+            val tweetIds = gif.tweets.map { it.id.toString() }
+            val keywords = gif.keywords
+            val response = Unirest.post("${federationSystem.url}/v1/gifs")
+                .header(FEDERATED_ID_HEADER, DataConfiguration.config.federation.id)
+                .header(FEDERATED_SECRET_HEADER, DataConfiguration.config.federation.secret)
+                .body(objectMapper.writeValueAsString(GifRequest(tweetIds, keywords)))
+                .asJson()
+            if(response.status != 200)
+                return badRequest().body(false)
+            val delete = deleteGif(id).body
+                ?: return badRequest().build()
+            return ok(delete)
+        } catch (e : Exception) {
+            throw e
+        }
     }
 }
