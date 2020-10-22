@@ -18,7 +18,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <kotlin.version>1.3.61</kotlin.version>
+        <kotlin.version>1.4.10</kotlin.version>
         <start-class>de.ddkfm.SpringDemoApplicationKt</start-class>
     </properties>
 
