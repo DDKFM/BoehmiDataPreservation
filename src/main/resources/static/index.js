@@ -17,7 +17,10 @@ var app = new Vue({
         showOnlyFavorites : false,
         keywords : {},
         users : {},
-        displayGifs : false
+        displayGifs : false,
+        federatedSystems: [],
+        addingTweetUrl : '',
+        addingKeywords : []
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -62,6 +65,36 @@ var app = new Vue({
             this.showOnlyFavorites = !this.showOnlyFavorites
             this.sendRequest(this.limit, 0)
         },
+        openAddGifModal : function() {
+            $('#mdAddGif').modal()
+            $('#mdAddGif').modal('open')
+            this.sendRequest(this.limit, 0)
+        },
+        addGif : function() {
+            let regex = app.addingTweetUrl.match('https://twitter.com/(.+)/status/(\\d+)')
+            if(regex == null)
+                return
+            let tweetId = regex[2]
+            let gifRequest = {
+                tweetIds: [tweetId],
+                keywords: app.addingKeywords
+            }
+            $.ajax({
+                type: "POST",
+                url: "/v1/gifs",
+                data: JSON.stringify(gifRequest),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){
+                    console.log(data);
+                    app.addingTweetUrl = ''
+                    app.addingKeywords = []
+                },
+                failure: function(errMsg) {
+                    console.log(errorMsg)
+                }
+            });
+        },
         showGifs : function(response) {
             app.gifs = response.gifs
             app.pageCount = Math.ceil(response.count / response.limit)
@@ -89,6 +122,32 @@ var app = new Vue({
         copyToClipboard : function(gif) {
             M.toast({html: 'Link in Zwischenablage kopiert'})
         },
+        openMigrationModal : function(gif) {
+            var tweetId = app.getTweetId(gif.url)
+            console.log(tweetId)
+            $("#" + tweetId + "_migrate_modal").modal();
+            $("#" + tweetId + "_migrate_modal").modal('open')
+        },
+        migrateToSystem : function(gif, federatedSystem) {
+            console.log(gif, federatedSystem)
+            var tweetId = app.getTweetId(gif.url)
+
+            $.ajax({
+                type: "PUT",
+                url: "/v1/gifs/" + tweetId,
+                data: federatedSystem.id,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){
+                    console.log(data);
+                    $("#" + tweetId + "_migrate_modal").modal('close')
+                    app.sendRequest(app.limit, app.currentPage)
+                },
+                failure: function(errMsg) {
+                    console.log(errorMsg)
+                }
+            });
+        },
         getTweetId : function(url) {
             return url.replace('/v1/gifs/', '')
         },
@@ -97,6 +156,10 @@ var app = new Vue({
         },
         prevPage : function() {
             return app.currentPage == 0 ? 0 : app.currentPage - 1;
+        },
+        addKeywordtoCreate : function() {
+            app.addingKeywords.push($('#newKeyword_create').val())
+            $('#newKeyword_create').val("")
         },
         onEnter : function(gif) {
             var tweetId = app.getTweetId(gif.url)
@@ -232,6 +295,19 @@ var app = new Vue({
         if(localStorage.displayGifs) {
             this.displayGifs = localStorage.displayGifs == 'true'
         }
+        $.ajax({
+            type: "GET",
+            url: "/v1/federations",
+            dataType: "json",
+            contextType: "application/json",
+            success: function(data){
+                console.log()
+                app.federatedSystems = data
+            },
+            failure: function(errMsg) {
+                console.log(errorMsg)
+            }
+        });
     },
     watch: {
         favorites(favorites) {
@@ -248,6 +324,6 @@ function range(size, startAt = 0) {
 }
 app.sendRequest(app.limit, app.currentPage)
 $('select').formSelect();
-$('#menu').floatingActionButton();
+$('.fixed-action-btn').floatingActionButton();
 app.fillAutocomplete()
 new ClipboardJS('.clipboard-element');

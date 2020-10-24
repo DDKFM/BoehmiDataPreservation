@@ -105,51 +105,64 @@ ________________________________________________________________________________
             <a href="#!" class="modal-close waves-effect waves-green btn-flat">Schließen</a>
         </div>
     </div>
+    <div class="fixed-action-btn">
+        <a class="btn-floating btn-large blue">
+            <i class="fa fa-bars"></i>
+        </a>
+        <ul>
+            <li>
+                <a class="hidden btn-floating btnwaves-effect waves-light blue" v-on:click="showFavorites()" title="zu Favoriten wechseln">
+                    <i class="fa fa-star" v-bind:class="[showOnlyFavorites ? 'isFavorite' : '']"></i>
+                </a>
+            </li>
+            <li>
+                <a class="hidden btn-floating btnwaves-effect waves-light blue" title="Tap" v-on:click="showKeywords()">
+                    <i class="fa fa-tags"></i>
+                </a>
+            </li>
+            <li>
+                <a class="hidden btn-floating btnwaves-effect waves-light blue" title="Tap" v-on:click="showAbout()">
+                    <i class="fa fa-info"></i>
+                </a>
+            </li>
+            <li>
+                <a class="hidden btn-floating btnwaves-effect waves-light red" v-on:click="openAddGifModal()" title="GIF hinzufügen">
+                    <i class="fa fa-plus"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="modal" id="mdAddGif">
+        <div class="modal-content">
+            <h5>GIF hinzufügen</h5>
+            <input type="text" placeholder="Tweet Link" v-model="addingTweetUrl"/>
+            <div class="chips">
+                <div class="chip" v-for="keyword in addingKeywords">
+                    {{ keyword }}
+                    <i class="close material-icons" v-on:click="addingKeywords.splice( addingKeywords.indexOf(keyword), 1 );">close</i>
+                </div>
+                <input class="input" placeholder="+Tag" id="newKeyword_create" v-on:keyup.enter="addKeywordtoCreate">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-light btn blue">Abbrechen</a>
+            <a v-on:click="addGif" class="modal-close waves-effect waves-light btn red">GIF hinzufügen</a>
+        </div>
+    </div>
     <nav class="transparent">
         <div class="row">
-            <div class="col s1"></div>
-            <div class="input-field col s7">
+            <div class="input-field col s9 offset-s1">
                 <input type="text" class="autocomplete " autocomplete="off" v-model="searchQuery" id="autocomplete-input" placeholder="GIF-Suche" v-on:keyup.enter="sendRequest(limit, 0)">
             </div>
-            <div class="col s1">
+            <div class="col s2">
                 <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="sendRequest(limit, 0)" title="Suchen">
                     <i class="fa fa-search"></i>
                 </a>
             </div>
-            <div class="col s2" id="menu" style="float:right">
-                <a class="btn-floating blue">
-                    <i class="fa fa-bars"></i>
-                </a>
-                <ul>
-                    <li>
-                        <a class="hidden btn-floating btnwaves-effect waves-light blue" v-on:click="showFavorites()" title="zu Favoriten wechseln">
-                            <i class="fa fa-star" v-bind:class="[showOnlyFavorites ? 'isFavorite' : '']"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hidden btn-floating btnwaves-effect waves-light blue" title="Tap" v-on:click="showKeywords()">
-                            <i class="fa fa-tags"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hidden btn-floating btnwaves-effect waves-light blue"
-                           v-on:click="displayGifs=!displayGifs"
-                           v-bind:title="[displayGifs ? 'GIFs werden als GIF angezeigt' : 'GIFs werden als Video angezeigt']">
-                            <i class="fa" v-bind:class="[displayGifs ? 'fa-picture-o' : 'fa-video-camera']"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hidden btn-floating btnwaves-effect waves-light blue" title="Tap" v-on:click="showAbout()">
-                            <i class="fa fa-info"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </div>
     </nav>
-    <div class="container">
-        <div class="row">
-
+    <div class="row">
+        <div class="col m8 offset-m2">
             <ul class="pagination" id="paging" class="blue">
                 <li class="waves-effect" v-if="pageCount">
                     <a v-on:click="sendRequest(limit, prevPage())">
@@ -170,20 +183,19 @@ ________________________________________________________________________________
                 </li>
             </ul>
         </div>
-        <div class="row">
-            <div class="card col s12" v-for="gif of gifs" style="margin: 10px;max-width: 500px">
-                <div class="card-content">
-
+    </div>
+    <div class="row">
+        <div class="col m10 offset-m1">
+            <div class="card col" v-for="gif of gifs" style="margin: 10px;max-width: 500px;padding: 0">
+                <div class="card-image">
                     <video autoplay loop autobuffer muted
                            width="100%"
                            v-bind:poster="gif.posterUrl"
                            v-bind:src="getImageData(gif.url, 'mp4')"
                            type="video/mp4" v-if="!displayGifs">
-                    </video><br>
-                    <picture v-if="displayGifs" width="100%">
-                        <source v-bind:srcset="getImageData(gif.url, 'gif')" type="image/gif">
-                        <img v-bind:src="getImageData(gif.url, 'gif')" alt="GIF" width="100%">
-                    </picture>
+                    </video>
+                </div>
+                <div class="card-content">
                     <div class="chips">
                         <div class="chip" v-for="keyword in gif.keywords">
                             {{ keyword }}
@@ -198,17 +210,22 @@ ________________________________________________________________________________
                     </a>
                     <a v-bind:href="getImageData(gif.url, 'mp4')"
                        v-bind:download="getImageFilename(gif.url, 'mp4')"
-                        title="als Video downloaden">
+                       title="als Video downloaden">
                         <i class="fa fa-download"></i>
                     </a>
                     <a v-bind:href="getImageData(gif.url, 'gif')"
                        v-bind:download="getImageFilename(gif.url, 'gif')"
-                        title="als GIF downloaden">
+                       title="als GIF downloaden">
                         <i class="fa fa-picture-o" style="color: green"></i>
                     </a>
                     <a v-bind:data-clipboard-text="getWebUrl(gif)" v-on:click="copyToClipboard(gif)"
                        title="copy Link" class="clipboard-element">
                         <i class="fa fa-clipboard" style="color: lightgray"></i>
+                    </a>
+
+                    <a v-on:click="openMigrationModal(gif)"
+                       title="Verschiebe zu anderem System" v-if="federatedSystems.length > 0">
+                        <i class="fa fa-exchange" style="color: black"></i>
                     </a>
                     <a v-for="otherUrl in gif.tweetUrls"
                        v-bind:href="otherUrl"
@@ -218,21 +235,36 @@ ________________________________________________________________________________
                     <a title="Gif löschen" v-on:click="openModal(gif)">
                         <i class="material-icons" style="float: right; color: red; font-weight: bold; cursor: pointer">close</i>
                     </a>
-                    <div v-bind:id="getTweetId(gif.url) + '_modal'" class="modal bottom-sheet">
+                    <div v-bind:id="getTweetId(gif.url) + '_modal'" class="modal">
                         <div class="modal-content">
-                            <h4>Löschen von GIF {{ getTweetId(gif.url) }}</h4>
+                            <h5>Löschen von GIF {{ getTweetId(gif.url) }}</h5>
                             <p>Möchtest du dieses Gif wirklich löschen?</p>
-                        </div><<
+                        </div>
                         <div class="modal-footer">
                             <a class="modal-close waves-effect waves-light btn blue">Nicht löschen</a>
                             <a v-on:click="deleteGif(gif)" class="modal-close waves-effect waves-light btn red">Löschen</a>
                         </div>
                     </div>
+                    <div v-bind:id="getTweetId(gif.url) + '_migrate_modal'" class="modal">
+                        <div class="modal-content">
+                            <h5>In welches Fandom willst du das GIF verschieben?</h5>
+                            <div class="collection blue-text">
+                                <a v-for="system in federatedSystems"
+                                   v-on:click="migrateToSystem(gif, system)"
+                                   class="collection-item blue-text"
+                                   style="cursor: pointer">
+                                    {{ system.name }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="row">
+    </div>
+    <div class="row s12">
 
+        <div class="col m8 offset-m2">
             <ul class="pagination" id="paging" class="blue">
                 <li class="waves-effect" v-if="pageCount">
                     <a v-on:click="sendRequest(limit, prevPage())">
