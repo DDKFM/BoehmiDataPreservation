@@ -13,6 +13,11 @@ import de.ddkfm.utils.sha256
 import de.ddkfm.utils.toGifResponse
 import kong.unirest.JsonNode
 import kong.unirest.Unirest
+import kong.unirest.json.JSONObject
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -89,7 +94,7 @@ class GifController {
                @RequestHeader(FEDERATED_SECRET_HEADER, required = false) federatedSecret : String?,
                @RequestHeader(FEDERATED_ID_HEADER, required = false) federatedId : String?) : ResponseEntity<String> {
 
-        var accepted = false
+        var accepted = true
         if(federatedId != null && federatedSecret != null) {
             val federationSystem = DataConfiguration.config.federation.systems.firstOrNull { it.id == federatedId }
             if(federationSystem == null || federationSystem.secret != federatedSecret.sha256())
@@ -115,15 +120,20 @@ class GifController {
         try {
             val federationSystem = DataConfiguration.config.federation.systems.firstOrNull { it.id == federationSystemId }
                 ?: return notFound().build()
-            val tweetIds = gif.tweets.map { it.id.toString() }
+            val tweetIds = gif.tweets.map { it.tweetId.toString() }
             val keywords = gif.keywords
-            val response = Unirest.post("${federationSystem.url}/v1/gifs")
-                .header(FEDERATED_ID_HEADER, DataConfiguration.config.federation.id)
-                .header(FEDERATED_SECRET_HEADER, DataConfiguration.config.federation.secret)
-                .body(objectMapper.writeValueAsString(GifRequest(tweetIds, keywords)))
-                .asJson()
-            if(response.status != 200)
-                return badRequest().body(false)
+            val gifRequest = objectMapper.writeValueAsString(GifRequest(tweetIds, keywords))
+            val request = Request.Builder()
+                .url("${federationSystem.url}/v1/gifs")
+                .addHeader(FEDERATED_ID_HEADER, DataConfiguration.config.federation.id)
+                .addHeader(FEDERATED_SECRET_HEADER, DataConfiguration.config.federation.secret)
+                .post(gifRequest.toRequestBody("application/json".toMediaType()))
+                .build()
+            val response = OkHttpClient().newCall(request).execute()
+            response.use {
+                if(response.code != 200)
+                    return badRequest().body(false)
+            }
             val delete = deleteGif(id).body
                 ?: return badRequest().build()
             return ok(delete)
