@@ -35,13 +35,13 @@ class SearchController {
         val gifs = if(query.isEmpty())
             gifRepo.findByDeletedFalse(pageRequest)
         else
-            gifRepo.findByKeywordsContains(mutableListOf(query), pageRequest)
+            tweetRepo.findByKeywordsContains(query.toLowerCase(), pageRequest)
         return ok(
             GifSearchResponse(
                 count = gifs.totalElements,
                 limit = limit,
                 offset = offset,
-                gifs = gifs.content.map { it.toGifResponse() }
+                gifs = gifs.content.distinctBy { it.id }.map { it.toGifResponse() }
             )
         )
     }
