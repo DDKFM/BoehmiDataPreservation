@@ -46,7 +46,7 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
     """, nativeQuery = true)
 
      */
-    @Query("SELECT g FROM Gif g LEFT JOIN g.keywords k LEFT JOIN g.tweets t LEFT JOIN t.user u WHERE k in :keywords ORDER BY t.createdAt DESC ")
+    @Query("SELECT g FROM Gif g LEFT JOIN g.keywords k LEFT JOIN g.tweets t LEFT JOIN t.user u WHERE g.deleted = false AND k in :keywords ORDER BY t.createdAt DESC ")
     fun findByKeywordsContains(
         keywords: MutableList<String>,
         pageable: Pageable
