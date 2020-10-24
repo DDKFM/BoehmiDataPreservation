@@ -31,10 +31,11 @@ class GifQueueScheduler {
             Twitter.doWithTwitter {
                 for(tweetId in gif.tweetIds) {
                     val status = showStatus(tweetId)
-                    statusUtils.toTweet(status, keywords = gif.keywords)
+                    val tweet = statusUtils.toTweet(status, keywords = gif.keywords)
+                    if(tweet != null)
+                        queueRepo.delete(gif)
                 }
             }
         }
-        queueRepo.deleteAll(gifs)
     }
 }
