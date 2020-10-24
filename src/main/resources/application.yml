@@ -20,10 +20,6 @@ spring:
       FAIL_ON_UNKNOWN_PROPERTIES: false
       ACCEPT_SINGLE_VALUE_AS_ARRAY: true
     default-property-inclusion: always
-  datasource:
-    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:boehmidatapreservation}
-    username: ${DATABASE_USERNAME:boehmidatapreservation}
-    password: ${DATABASE_PASSWORD:boehmidatapreservation}
   jpa:
     show_sql: true
     generate-ddl: true
@@ -36,6 +32,14 @@ spring:
   data:
     jpa:
       repositories.enabled: true
+      properties:
+        org:
+          hibernate:
+            envers:
+              audit_table_suffix: _AUDIT
+              revision_field_name: REVISION_ID
+              revision_type_field_name: REVISION_TYPE
+
 springdoc:
   swagger-ui:
     path: /swagger-ui
@@ -44,4 +48,6 @@ springdoc:
 logging:
   level:
     org.springframework.web: INFO
+    #org.hibernate: debug
+    #org.hibernate.type.descriptor.sql: trace
   file: logs/app.log
