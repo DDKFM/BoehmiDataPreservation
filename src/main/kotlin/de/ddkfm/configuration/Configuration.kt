@@ -5,4 +5,5 @@ data class Configuration (
     var locations : LocationConfiguration = LocationConfiguration(),
     var federation :FederationConfiguration,
     var following : FollowingConfiguration,
+    var db : DatabaseConfiguration = DatabaseConfiguration()
 )

@@ -9,7 +9,8 @@ import kotlin.system.exitProcess
 object DataConfiguration {
     val yamlObjectMapper by lazy { ObjectMapper(YAMLFactory()).registerModule(KotlinModule()) }
     val config by lazy {
-        val configFile = File("./config.yaml")
+        val configLocation = System.getenv("CONFIG_YAML_LOCATION") ?: "./config.yaml"
+        val configFile = File(configLocation)
         return@lazy try {
             yamlObjectMapper.readValue(configFile.inputStream(), Configuration::class.java)
         } catch (e : Exception) {
