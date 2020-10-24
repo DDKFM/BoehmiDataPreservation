@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
+import org.hibernate.envers.Audited
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -16,6 +17,7 @@ import javax.persistence.*
 @NoArgsConstructor
 @Entity
 @DynamicUpdate
+@Audited
 data class GifQueue(
     @ElementCollection
     var tweetIds : MutableList<Long>,

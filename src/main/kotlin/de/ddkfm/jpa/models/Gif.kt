@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
+import org.hibernate.envers.Audited
 import javax.persistence.*
 
 @Data
@@ -15,6 +16,7 @@ import javax.persistence.*
 @NoArgsConstructor
 @Entity
 @DynamicUpdate
+@Audited
 data class Gif(
     @Column
     val posterUrl : String?,
