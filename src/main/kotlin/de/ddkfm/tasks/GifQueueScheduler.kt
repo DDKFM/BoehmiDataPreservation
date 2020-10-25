@@ -19,6 +19,9 @@ class GifQueueScheduler {
     lateinit var queueRepo : GifQueueRepository
 
     @Autowired
+    lateinit var gifRepo : GifRepository
+
+    @Autowired
     lateinit var statusUtils : StatusUtils
 
     @Scheduled(fixedRate = 30000)
@@ -32,8 +35,13 @@ class GifQueueScheduler {
                 for(tweetId in gif.tweetIds) {
                     val status = showStatus(tweetId)
                     val tweet = statusUtils.toTweet(status, keywords = gif.keywords)
-                    if(tweet != null)
+                    if(tweet != null) {
+                        if(tweet.gif.deleted) {
+                            tweet.gif.deleted = false
+                            gifRepo.save(tweet.gif)
+                        }
                         queueRepo.delete(gif)
+                    }
                 }
             }
         }
