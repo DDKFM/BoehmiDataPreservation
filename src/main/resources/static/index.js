@@ -20,10 +20,12 @@ var app = new Vue({
         federatedSystems: [],
         addingTweetUrl : '',
         addingKeywords : [],
-        migrationInProgress : false
+        migrationInProgress : false,
+        showPreloader : false
     },
     methods : {
         sendRequest : function (limit, page) {
+            app.showPreloader = true
             this.currentPage = page
             var query = app.searchQuery == '' ? '' : '&query=' + app.searchQuery
             var offset = page * limit
@@ -96,7 +98,10 @@ var app = new Vue({
             });
         },
         showGifs : function(response) {
-            app.gifs = response.gifs
+            app.gifs = response.gifs.map(gif => {
+                gif.loaded = false
+                return gif
+            })
             app.pageCount = Math.ceil(response.count / response.limit)
             $('.chips-placeholder').chips({
                 placeholder: 'Tag hinzufügen',
@@ -108,6 +113,11 @@ var app = new Vue({
                     console.log(this.el.id)
                 }
             });
+        },
+        gifLoaded : function(gif) {
+            gif.loaded = true
+            if(app.gifs.every(gif => gif.loaded))
+                app.showPreloader = false
         },
         getImageData : function(url, type) {
             return url + "/data" + (type == "gif" ? "?type=image/gif" : "")
