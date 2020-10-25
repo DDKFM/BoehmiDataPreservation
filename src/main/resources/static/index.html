@@ -77,6 +77,88 @@ ________________________________________________________________________________
             <a href="#!" class="modal-close waves-effect waves-green btn-flat">Schließen</a>
         </div>
     </div>
+
+    <div id="messageBox" class="modal">
+        <div class="modal-content">
+            <h4>Willkommen zum Relaunch</h4>
+            <p>
+                Für den Start des ZDF Magazin Royale habe ich mir erlaubt
+                ein "paar" kleine Features hinzufügen (neben dem kompletten Umbau des technischen
+                Unterbaus dieser Seite). Hier ein kleiner Auszug:
+            </p>
+            <h5>PERFORMANCE!!!!1ELF</h5>
+            <p>
+                Durch die technische Umstrukturierung ist die ganze Seite jetzt wesentlich flotter,
+                die GIF Downloads sind wesentlich kleiner und man sieht nun, wann alle GIFs geladen sind.
+            </p>
+            <h5>Suche und Favoriten</h5>
+            <p>
+                Wie auch schon in der alten Version lässt sich neben Tags mit <b>@Benutzername</b> nach GIFs eines
+                bestimmten Twitter Nutzers suchen. Neu ist, dass die Suche nun Hashtags inkludiert. Suchst also nach z.B.
+                <b>#DresdensEleven</b> so werden dir alle GIFs angezeigt, welche diesen Hashtag als Referenz haben
+
+                Weiterhin kannst du GIFs als Favoriten speichern und anschließend anzeigen (
+                <a class="btn-floating btn-small blue">
+                    <i class="fa fa-bars"></i>
+                </a>
+                und
+
+                <a class="btn-floating btnwaves-effect waves-light blue btn-small" v-on:click="showFavorites()" title="zu Favoriten wechseln">
+                    <i class="fa fa-star" v-bind:class="[showOnlyFavorites ? 'isFavorite' : '']"></i>
+                </a>
+                ). Diese Favoriten werden hierbei 100% lokal auf deinem Gerät gespeichert und es erfolgt
+                kein Tracking auf Serverseite
+            </p>
+            <h5>Eigene GIFs hinzufügen</h5>
+            <p>
+                Neben den automatisch erzeugten GIFs gibt es nun die Möglichkeit durch einen Klick auf
+
+                <a class="btn-floating btn-small blue">
+                    <i class="fa fa-bars"></i>
+                </a>
+                und
+
+                <a class="btn-floating btnwaves-effect btn-small waves-light red" v-on:click="openAddGifModal()" title="GIF hinzufügen">
+                    <i class="fa fa-plus"></i>
+                </a>
+                einen eigenen Tweet über den entsprechenden Link hinzuzufügen.
+                Dieser Tweet wird dann im Hintergrund vom Service heruntergeladen und gespeichert.
+                Dies kann einige Zeit dauern
+            </p>
+            <h5>Umzug eines GIF</h5>
+            <p>
+                Mit diesem Relaunch erfolgt gleichzeitig ein Launch von anderen Plattformen für Fandom GIFs.
+                Dabei gibt es die Möglichkeit ein bestehendes GIF mit <i class="fa fa-exchange" style="color: black"></i>
+                zu einem anderen registrieren System zu übertragen.
+                Wie auch das Hinzufügen eines neuen GIFs passiert dies automatisch im Hintergrund und
+                kann daher einige Sekunden dauern<br/>
+                Aktuell gibt es folgende anderen Fandoms:<br/>
+                <a href="#"
+                   class="collection-item blue-text avatar"
+                   style="cursor: pointer">
+                    <img src="/v1/icons/70.png" class="circle"/>
+                </a>
+                <a v-for="system in federatedSystems"
+                    v-bind:href="system.url"
+                    class="collection-item blue-text avatar"
+                    style="cursor: pointer">
+                    <img v-bind:src="'/v1/icons/federations/' + system.id + '/70.png'" class="circle"/>
+                </a>
+                <br/>
+                Viel Spaß beim GIFs runterladen!
+                <br/>
+                <br/>
+                In diesem Sinne: ❤️✊😉
+            </li>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" v-on:click="closeFirstMessage" class="modal-close waves-effect waves-green white-text blue btn-flat">
+                Bla, Bla ich habe die AGB gelesen
+            </a>
+        </div>
+    </div>
+
     <div id="aboutModal" class="modal">
         <div class="modal-content">
             <div class="row">
@@ -157,15 +239,17 @@ ________________________________________________________________________________
                 <a class="btn-floating btnwaves-effect waves-light blue" v-on:click="sendRequest(limit, 0)" title="Suchen">
                     <i class="fa fa-search"></i>
                 </a>
-                <div class="preloader-wrapper small active" style="vertical-align: middle" v-if="showPreloader">
-                    <div class="spinner-layer spinner-blue-only">
-                        <div class="circle-clipper left">
+                <div class="col s1">
+                    <div class="preloader-wrapper small active" style="vertical-align: middle" v-if="showPreloader">
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div><div class="gap-patch">
                             <div class="circle"></div>
-                        </div><div class="gap-patch">
-                        <div class="circle"></div>
-                    </div><div class="circle-clipper right">
-                        <div class="circle"></div>
-                    </div>
+                        </div><div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                        </div>
                     </div>
                 </div>
             </div>

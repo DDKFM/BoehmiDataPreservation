@@ -21,7 +21,8 @@ var app = new Vue({
         addingTweetUrl : '',
         addingKeywords : [],
         migrationInProgress : false,
-        showPreloader : false
+        showPreloader : false,
+        showFirstMessage : true
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -244,6 +245,9 @@ var app = new Vue({
                 app.favorites.push(tweetId)
             }
         },
+        closeFirstMessage : function() {
+          app.showFirstMessage = false
+        },
         isGifFavorite : function(gif) {
             var tweetId = app.getTweetId(gif.url)
             return app.favorites.indexOf(tweetId) != -1
@@ -309,6 +313,9 @@ var app = new Vue({
         if (localStorage.favorites) {
             this.favorites = JSON.parse(localStorage.favorites);
         }
+        if(localStorage.showFirstMessage) {
+            this.showFirstMessage = JSON.parse(localStorage.showFirstMessage)
+        }
         $.ajax({
             type: "GET",
             url: "/v1/federations",
@@ -322,11 +329,18 @@ var app = new Vue({
                 console.log(errorMsg)
             }
         });
+        if(this.showFirstMessage) {
+            $('#messageBox').modal()
+            $('#messageBox').modal('open')
+        }
     },
     watch: {
         favorites(favorites) {
             localStorage.favorites= JSON.stringify(this.favorites);
         },
+        showFirstMessage(showFirstMessage) {
+            localStorage.showFirstMessage = this.showFirstMessage
+        }
     }
 });
 
