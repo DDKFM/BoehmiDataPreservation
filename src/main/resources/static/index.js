@@ -17,10 +17,10 @@ var app = new Vue({
         showOnlyFavorites : false,
         keywords : {},
         users : {},
-        displayGifs : false,
         federatedSystems: [],
         addingTweetUrl : '',
-        addingKeywords : []
+        addingKeywords : [],
+        migrationInProgress : false
     },
     methods : {
         sendRequest : function (limit, page) {
@@ -131,7 +131,7 @@ var app = new Vue({
         migrateToSystem : function(gif, federatedSystem) {
             console.log(gif, federatedSystem)
             var tweetId = app.getTweetId(gif.url)
-
+            app.migrationInProgress = true
             $.ajax({
                 type: "PUT",
                 url: "/v1/gifs/" + tweetId,
@@ -141,6 +141,7 @@ var app = new Vue({
                 success: function(data){
                     console.log(data);
                     $("#" + tweetId + "_migrate_modal").modal('close')
+                    app.migrationInProgress = false
                     app.sendRequest(app.limit, app.currentPage)
                 },
                 failure: function(errMsg) {
@@ -292,9 +293,6 @@ var app = new Vue({
         if (localStorage.favorites) {
             this.favorites = JSON.parse(localStorage.favorites);
         }
-        if(localStorage.displayGifs) {
-            this.displayGifs = localStorage.displayGifs == 'true'
-        }
         $.ajax({
             type: "GET",
             url: "/v1/federations",
@@ -313,9 +311,6 @@ var app = new Vue({
         favorites(favorites) {
             localStorage.favorites= JSON.stringify(this.favorites);
         },
-        displayGifs(displayGifs) {
-            localStorage.displayGifs = this.displayGifs
-        }
     }
 });
 
