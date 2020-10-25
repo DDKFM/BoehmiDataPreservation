@@ -17,13 +17,10 @@ object Twitter {
         .setOAuthConsumerSecret(DataConfiguration.config.twitter.consumerKeySecret)
         .build()
     private val twitter by lazy {TwitterFactory(configuration).instance }
-    val rateLimitLock = ReentrantLock()
     private val streamConnection by lazy { TwitterStreamFactory(configuration).instance }
 
      fun <T> doWithTwitter(doThings : Twitter.() -> T) : T  {
-        while(rateLimitLock.isLocked)
-            Thread.sleep(500)
-        return twitter.doThings()
+         return twitter.doThings()
     }
     fun <T> doTryWithTwitter(doThings : Twitter.() -> T) : T? {
         return try {
