@@ -98,10 +98,7 @@ var app = new Vue({
             });
         },
         showGifs : function(response) {
-            app.gifs = response.gifs.map(gif => {
-                gif.loaded = false
-                return gif
-            })
+            app.gifs = response.gifs
             app.pageCount = Math.ceil(response.count / response.limit)
             $('.chips-placeholder').chips({
                 placeholder: 'Tag hinzufügen',
@@ -113,10 +110,19 @@ var app = new Vue({
                     console.log(this.el.id)
                 }
             });
+            if(this.videosAreLoaded)
+                app.showPreloader = false
+        },
+        videosAreLoaded : function() {
+            return $( "video" )
+                    .map(function( index ) {
+                        return $( this ).prop("readyState")
+                    })
+                    .toArray()
+                    .every(readystate => readystate === 4)
         },
         gifLoaded : function(gif) {
-            gif.loaded = true
-            if(app.gifs.every(gif => gif.loaded))
+            if(this.videosAreLoaded)
                 app.showPreloader = false
         },
         getImageData : function(url, type) {
