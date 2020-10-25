@@ -65,7 +65,7 @@ class GifController {
         } ?: return notFound().build()
         val stream = StreamingResponseBody { out -> gif.use { IOUtils.copy(gif, out) } }
         return ok()
-            .contentType(MediaType.parseMediaType("video/mp4"))
+            .contentType(MediaType.parseMediaType(type))
             .body(stream)
     }
 
