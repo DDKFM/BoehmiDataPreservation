@@ -14,6 +14,10 @@ import de.ddkfm.utils.sha256
 import de.ddkfm.utils.toGifResponse
 import kong.unirest.JsonNode
 import kong.unirest.Unirest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -58,10 +62,34 @@ class IconController {
             e.printStackTrace()
             null
         }
-        if(content == null)
-            return notFound().build()
+            ?: return notFound().build()
         val responseBody = StreamingResponseBody {
             IOUtils.copy(content, it)
+        }
+        return ok()
+            .contentType(MediaType.IMAGE_PNG)
+            .body(responseBody)
+    }
+
+    @GetMapping("/federations/{federationId}/{filename}")
+    fun getIcons(
+        @PathVariable("federationId") federationId : String,
+        @PathVariable("filename") filename : String) : ResponseEntity<StreamingResponseBody> {
+        if(filename !in AVAILABLE_FILENAMES)
+            return badRequest().build()
+        val system = DataConfiguration.config.federation.systems.firstOrNull { it.id == federationId }
+            ?: return notFound().build()
+        val request = Request.Builder()
+            .url("${system.url}/v1/icons/$filename")
+            .get()
+            .build()
+        val response = OkHttpClient().newCall(request).execute()
+        val responseBody = StreamingResponseBody { out ->
+            response.use {
+                if(response.code == 200) {
+                    IOUtils.copy(response.body?.byteStream(), out)
+                }
+            }
         }
         return ok()
             .contentType(MediaType.IMAGE_PNG)
