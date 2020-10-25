@@ -52,42 +52,55 @@ class DataInitializer : CommandLineRunner {
     }
 
     private fun migrateLuceneToHibernate() {
-        val documents = LuceneRepository.query("*:*", Integer.MAX_VALUE, 0)
-        val pool = Executors.newFixedThreadPool(10)
-        Twitter.doWithTwitter {
-            for (document in documents.content) {
-                pool.submit {
-                    val tweetId = document.get("twitterId").toLong()
-                    val otherIds = document.get("sameTweetIds").split(" ")
-                        .mapNotNull { it.toLongOrNull() }
-                    otherIds.plus(tweetId).forEach { id ->
-                        this.migrateStatus(id, document)
-                    }
+        val documents = LuceneRepository.query("deleted:false", Integer.MAX_VALUE, 0)
+        val pool = Executors.newFixedThreadPool(1)
+        println("EXECUTE WITH 1 THREAD")
+        for (document in documents.content) {
+            pool.submit {
+                val tweetId = document.get("twitterId").toLong()
+                val otherIds = document.get("sameTweetIds").split(" ")
+                    .mapNotNull { it.toLongOrNull() }
+                otherIds.plus(tweetId).forEach { id ->
+                    migrateStatus(id, document)
                 }
             }
         }
         println(documents.hits)
     }
 
-    private fun twitter4j.Twitter.migrateStatus(tweetId : Long, document : Document) {
-        if (tweetRepo.findByTweetId(tweetId).isPresent) {
-            println("skip $tweetId")
-            return
+    private fun migrateStatus(tweetId : Long, document : Document) {
+        Twitter.doWithTwitter {
+            if (tweetRepo.findByTweetId(tweetId).isPresent) {
+                println("skip $tweetId")
+                return@doWithTwitter
+            }
+            val status = retryOnRateLimit { this.showStatus(tweetId) }
+                ?: return@doWithTwitter
+            val keywords = document.get("keywords").split(" ")
+                .filter { it.isNotEmpty() }
+                .filter { it != "neomagazin" }
+                .map { it.toLowerCase() }
+                .distinct()
+            val tweet = statusUtils.toTweet(status, keywords)
+                ?: return@doWithTwitter
+            val gifId = tweet.gif.id ?: return@doWithTwitter
         }
-        val status = try {
-            this.showStatus(tweetId)
-        } catch (e: TwitterException) {
-            println("$tweetId (${document.get("user")})" + e.message)
-            null
-        } ?: return
+    }
 
-        val keywords = document.get("keywords").split(" ")
-            .filter { it.isNotEmpty() }
-            .filter { it != "neomagazin" }
-            .map { it.toLowerCase() }
-            .distinct()
-        val tweet = statusUtils.toTweet(status, keywords)
-            ?: return
-        val gifId = tweet.gif.id ?: return
+    fun <T> twitter4j.Twitter.retryOnRateLimit(block : twitter4j.Twitter.() -> T) : T? {
+        return try {
+            this.block()
+        } catch (e: TwitterException) {
+            if(e.errorCode == 88) {
+                var remaining = this.rateLimitStatus["/statuses/show/:id"]!!.remaining
+                println(remaining)
+                while(remaining <= 10) {
+                    Thread.sleep(10000)
+                    remaining = this.rateLimitStatus["/statuses/show/:id"]!!.remaining
+                }
+                retryOnRateLimit(block)
+            }
+            null
+        }
     }
 }
