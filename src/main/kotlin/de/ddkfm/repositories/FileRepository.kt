@@ -30,20 +30,15 @@ object FileRepository {
         val gif = File(gifsLocation,"$tweetId.gif")
         return if(gif.exists())
             gif.inputStream()
-        else
+        else {
+            val existingVideo = File(videoLocation,"$tweetId.mp4")
+            if(existingVideo.exists()) {
+                convertToGif(existingVideo, gif)
+            }
             null
-    }
-    fun convertAllFiles() {
-        val files = videoLocation.listFiles()
-        for(file in files) {
-            val id = file.name.replace(".mp4", "").toLongOrNull()
-                ?: continue
-            val gif = File(gifsLocation,"$id.gif")
-            if(gif.exists())
-                continue
-            convertToGif(file, gif)
         }
     }
+
     fun existsByGifId(gifId : String) : Boolean {
         val videoFile = File(videoLocation, "$gifId.mp4")
         val gifFile = File(gifsLocation, "$gifId.gif")
@@ -56,7 +51,7 @@ object FileRepository {
 
         val builder = FFmpegBuilder()
             .setInput(videoFile.absolutePath)
-            .addExtraArgs("-r", "15")
+            .addExtraArgs("-r", "24")
             .overrideOutputFiles(true)
             .addOutput(gifFile.absolutePath)
             .setFormat("gif")
