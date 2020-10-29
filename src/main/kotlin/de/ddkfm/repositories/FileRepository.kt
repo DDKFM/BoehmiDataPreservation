@@ -51,7 +51,7 @@ object FileRepository {
 
         val builder = FFmpegBuilder()
             .setInput(videoFile.absolutePath)
-            .addExtraArgs("-r", "24")
+            .addExtraArgs("-filter_complex", "fps=24")
             .overrideOutputFiles(true)
             .addOutput(gifFile.absolutePath)
             .setFormat("gif")
