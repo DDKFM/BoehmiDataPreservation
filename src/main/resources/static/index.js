@@ -269,26 +269,35 @@ var app = new Vue({
             $("#keywordsModal").modal('close')
         },
         fillAutocomplete : function() {
+            var autocompleteData = {}
+
             $.get('/v1/users', function(response) {
                 app.users = response
-                var twitterUsers = {}
                 app.users.forEach(user => {
-                    twitterUsers['@' + user.name] = user.profileImage
+                    autocompleteData['@' + user.name] = user.profileImage
                 });
-                console.log(twitterUsers)
-                $('input.autocomplete').autocomplete({
-                    data: twitterUsers,
-                    minChars: 0,
-                    onAutocomplete : function(e) {
-                        console.log(e)
-                        app.searchQuery = e
-                        app.sendRequest(10, 0)
-                    }
-                }).focus(function () {
-                    console.log('blub')
-                        $(this).autocomplete('open')
-                    });;
+                console.log(autocompleteData)
             })
+            $.get('/v1/keywords', function(response) {
+                response.forEach(keyword => {
+                    autocompleteData[keyword] = ""
+                });
+                console.log(autocompleteData)
+            })
+
+            $('input.autocomplete').autocomplete({
+                data: autocompleteData,
+                minChars: 0,
+                limit: 20,
+                onAutocomplete : function(e) {
+                    console.log(e)
+                    app.searchQuery = e
+                    app.sendRequest(10, 0)
+                }
+            }).focus(function () {
+                console.log('blub')
+                $(this).autocomplete('open')
+            });;
         },
         pageBorder : function() {
             var pages = [0]
