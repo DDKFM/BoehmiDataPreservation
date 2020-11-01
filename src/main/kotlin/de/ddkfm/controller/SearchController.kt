@@ -116,4 +116,11 @@ class SearchController {
         )
     }
 
+    @GetMapping("/keywords")
+    @TrackExecutionTime
+    fun getKeywords(@RequestParam("filter", defaultValue = "") filter : String) : ResponseEntity<List<String>>{
+        val keywords = gifRepo.getKeywords(filter, PageRequest.of(0, Integer.MAX_VALUE))
+        return ok(keywords)
+    }
+
 }
