@@ -58,7 +58,7 @@ class SearchController {
         if(query.isEmpty())
             return search(query, limit, offset)
         val pageRequest = PageRequest.of(offset / limit, limit)
-        val gifs = gifRepo.blub(query, pageRequest)
+        val gifs = gifRepo.findByKeywordAndHashtag(query, pageRequest)
         return ok(
             GifSearchResponse(
                 count = gifs.totalElements,
