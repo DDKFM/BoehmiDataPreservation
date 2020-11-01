@@ -12,10 +12,6 @@ fun Gif.toGifResponse() : GifResponse {
     return GifResponse(
         url = "/v1/gifs/$id",
         keywords = this.keywords,
-        user = UserResponse(
-            name = firstTweet.user.name,
-            screenName = firstTweet.user.screenName
-        ),
         tweetUrls = tweets.map { it.getTweetURL() },
         posterUrl = this.posterUrl
     )
