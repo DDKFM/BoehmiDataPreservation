@@ -19,7 +19,7 @@ class UserController {
     lateinit var userRepo : UserRepository
     @GetMapping("/users")
     fun getUsers() : ResponseEntity<List<TweeterResponse>> {
-        val users = userRepo.findAll()
+        val users = userRepo.findByNotDeleted()
             .map { it.toTwitterUser() }
         return ok(users)
     }
