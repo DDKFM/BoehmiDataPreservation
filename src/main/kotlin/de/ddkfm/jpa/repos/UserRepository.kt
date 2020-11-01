@@ -10,6 +10,6 @@ import java.util.*
 interface UserRepository : JpaRepository<Tweeter, String> {
     fun findByUserId(userId : Long) : Optional<Tweeter>
 
-    @Query("select u from Tweet t inner join Tweeter u inner join Gif g where g.deleted = false")
+    @Query("select distinct t.user from Tweet t where t.gif.deleted = false")
     fun findByNotDeleted() : List<Tweeter>
 }
