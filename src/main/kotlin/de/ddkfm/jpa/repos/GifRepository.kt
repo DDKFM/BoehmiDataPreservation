@@ -21,7 +21,7 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
 
     fun findByHash(hash : String) : List<Gif>
 
-    @Query("SELECT g FROM Gif g LEFT JOIN  g.tweets t WHERE t.user.screenName = :userName")
+    @Query("SELECT g FROM Gif g LEFT JOIN  g.tweets t WHERE t.user.screenName = :userName and g.deleted = false")
     fun findByUserName(userName : String, pageable: Pageable) : List<Gif>
     fun findByDeletedFalse(pageable: Pageable) : Page<Gif>
 
