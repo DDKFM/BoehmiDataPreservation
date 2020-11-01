@@ -28,7 +28,7 @@ var app = new Vue({
         sendRequest : function (limit, page) {
             app.showPreloader = true
             this.currentPage = page
-            var query = app.searchQuery == '' ? '' : '&query=' + app.searchQuery
+            var query = app.searchQuery === '' ? '' : '&query=' + app.searchQuery.replace('#', '')
             var offset = page * limit
             var url = "/v1/search"
             var data = ''
@@ -276,13 +276,17 @@ var app = new Vue({
                 app.users.forEach(user => {
                     autocompleteData['@' + user.name] = user.profileImage
                 });
-                console.log(autocompleteData)
             })
             $.get('/v1/keywords', function(response) {
                 response.forEach(keyword => {
                     autocompleteData[keyword] = ""
                 });
-                console.log(autocompleteData)
+            })
+
+            $.get('/v1/hashtags', function(response) {
+                response.forEach(hashtag => {
+                    autocompleteData["#" + hashtag] = null
+                });
             })
 
             $('input.autocomplete').autocomplete({

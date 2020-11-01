@@ -102,4 +102,7 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
     @Query("select k from Gif g left join g.keywords k where g.deleted = false and lower(k) like %:filter group by k order by count(*) desc")
     fun getKeywords(filter : String, pageable: Pageable) : List<String>
 
+    @Query("select h from Tweet t inner join t.hashtags h where t.gif.deleted = false and lower(h) like %:filter group by h order by count(*) desc")
+    fun getHashtags(filter : String, pageable: Pageable) : List<String>
+
 }

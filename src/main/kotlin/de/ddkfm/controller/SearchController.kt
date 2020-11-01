@@ -58,7 +58,7 @@ class SearchController {
         if(query.isEmpty())
             return search(query, limit, offset)
         val pageRequest = PageRequest.of(offset / limit, limit)
-        val gifs = gifRepo.findByKeywordAndHashtag(query, pageRequest)
+        val gifs = gifRepo.findByKeywordAndHashtag(query.replaceFirst("#", ""), pageRequest)
         return ok(
             GifSearchResponse(
                 count = gifs.totalElements,
@@ -120,6 +120,13 @@ class SearchController {
     @TrackExecutionTime
     fun getKeywords(@RequestParam("filter", defaultValue = "") filter : String) : ResponseEntity<List<String>>{
         val keywords = gifRepo.getKeywords(filter, PageRequest.of(0, Integer.MAX_VALUE))
+        return ok(keywords)
+    }
+
+    @GetMapping("/hashtags")
+    @TrackExecutionTime
+    fun getHashtags(@RequestParam("filter", defaultValue = "") filter : String) : ResponseEntity<List<String>>{
+        val keywords = gifRepo.getHashtags(filter, PageRequest.of(0, Integer.MAX_VALUE))
         return ok(keywords)
     }
 
