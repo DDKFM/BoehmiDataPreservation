@@ -1,5 +1,6 @@
 package de.ddkfm
 
+import com.google.gson.JsonObject
 import de.ddkfm.configuration.DataConfiguration
 import de.ddkfm.jpa.models.Gif
 import de.ddkfm.jpa.models.Tweet
@@ -10,6 +11,8 @@ import de.ddkfm.jpa.repos.UserRepository
 import de.ddkfm.repositories.FileRepository
 import de.ddkfm.repositories.LuceneRepository
 import de.ddkfm.utils.*
+import kong.unirest.json.JSONArray
+import kong.unirest.json.JSONObject
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.lucene.document.Document
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component
 import twitter4j.MediaEntity
 import twitter4j.Status
 import twitter4j.TwitterException
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -55,7 +59,11 @@ class DataInitializer : CommandLineRunner {
         val documents = LuceneRepository.query("deleted:false", Integer.MAX_VALUE, 0)
         val pool = Executors.newFixedThreadPool(1)
         println("EXECUTE WITH 1 THREAD")
+        val json = JSONArray()
         for (document in documents.content) {
+            val jsonObj = JSONObject()
+            document.fields.forEach { field -> jsonObj.put(field.name(), field.stringValue()) }
+            json.put(jsonObj)
             pool.submit {
                 val tweetId = document.get("twitterId").toLong()
                 val otherIds = document.get("sameTweetIds").split(" ")
@@ -65,6 +73,7 @@ class DataInitializer : CommandLineRunner {
                 }
             }
         }
+        File("/tmp/backup.json").writeBytes(json.toString(4).toByteArray())
         println(documents.hits)
     }
 
