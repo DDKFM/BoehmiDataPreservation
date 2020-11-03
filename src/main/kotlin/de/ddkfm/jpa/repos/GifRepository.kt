@@ -22,7 +22,7 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
     fun findByHash(hash : String) : List<Gif>
 
     @Query("SELECT t.gif FROM Tweet t WHERE t.user.screenName = :userName and t.gif.deleted = false")
-    fun findByUserName(userName : String, pageable: Pageable) : List<Gif>
+    fun findByUserName(userName : String, pageable: Pageable) : Page<Gif>
     fun findByDeletedFalse(pageable: Pageable) : Page<Gif>
 
     @Query("SELECT k, count(k) FROM Gif g JOIN g.keywords k GROUP BY k")
@@ -97,7 +97,7 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
         nativeQuery = true)
     fun findByKeywordAndHashtag(keyword : String, pageable: Pageable) : Page<Array<Any?>>
 
-    fun findByIdInAndDeletedFalse(id: List<String>, pageable: Pageable) : List<Gif>
+    fun findByIdInAndDeletedFalse(id: List<String>, pageable: Pageable) : Page<Gif>
 
     @Query("select k from Gif g left join g.keywords k where g.deleted = false and lower(k) like %:filter group by k order by count(*) desc")
     fun getKeywords(filter : String, pageable: Pageable) : List<String>

@@ -13,7 +13,8 @@ import java.util.*
 interface TweetRepository : JpaRepository<Tweet, String> {
     fun findByTweetId(id : Long) : Optional<Tweet>
 
-    fun findByTweetIdIn(tweetId: List<Long>, pageable: Pageable) : List<Tweet>
+    @Query("Select t.gif from Tweet t where t.tweetId in :tweetId")
+    fun findByTweetIdIn(tweetId: List<Long>, pageable: Pageable) : Page<Gif>
 
 
     @Query("SELECT h, count(h) FROM Tweet t JOIN t.hashtags h GROUP BY h")

@@ -83,10 +83,10 @@ class SearchController {
         val gifs = gifRepo.findByUserName(username, PageRequest.of(offset / limit, limit))
         return ok(
             GifSearchResponse(
-                count = gifs.size.toLong(),
+                count = gifs.totalElements,
                 limit = limit,
                 offset = offset,
-                gifs = gifs.map { it.toGifResponse() }
+                gifs = gifs.content.map { it.toGifResponse() }
             )
         )
     }
@@ -100,18 +100,15 @@ class SearchController {
         val tweetIds = ids?.mapNotNull { it.toLongOrNull() } ?: emptyList()
         val gifs = if(tweetIds.isNotEmpty()) {
             tweetRepo.findByTweetIdIn(tweetIds, PageRequest.of(offset / limit, limit))
-                .map { it.gif }
-                .distinctBy { it.id }
         } else {
-            val ids = ids ?: emptyList()
-            gifRepo.findByIdInAndDeletedFalse(ids, PageRequest.of(offset / limit, limit))
+            gifRepo.findByIdInAndDeletedFalse(ids ?: emptyList(), PageRequest.of(offset / limit, limit))
         }
         return ok(
             GifSearchResponse(
-                count = gifs.size.toLong(),
+                count = gifs.totalElements,
                 limit = limit,
                 offset = offset,
-                gifs = gifs.map { it.toGifResponse() }
+                gifs = gifs.content.map { it.toGifResponse() }
             )
         )
     }
