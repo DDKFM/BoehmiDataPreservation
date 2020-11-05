@@ -58,8 +58,8 @@ interface GifRepository : PagingAndSortingRepository<Gif, String> {
         select 
             '/v1/gifs/' || g.id,
             g.poster_url, 
-            STRING_AGG('https://twitter.com/' || u.screen_name || '/statuses/' || t.tweet_id, ',') as tweet_urls,
-            STRING_AGG(k.keywords, ',') as blub,
+            STRING_AGG(distinct 'https://twitter.com/' || u.screen_name || '/statuses/' || t.tweet_id, ',') as tweet_urls,
+            STRING_AGG(distinct k.keywords, ',') as blub,
             STRING_AGG(distinct h.hashtags, ',') as bla
         from tweet t 
         inner join gif g on t.gif_id = g.id 
